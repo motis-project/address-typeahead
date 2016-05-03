@@ -50,3 +50,25 @@ gcc-5-debug-valgrind:
     - cmake -DCMAKE_BUILD_TYPE=Debug ..
     - make -j8 at-test at-example
     - valgrind ./at-test
+
+# Clang-Tidy
+clang-tidy:
+  script:
+    - export BOOST_ROOT=/opt/boost_1_60_0-clang-3.8
+    - export CXX=clang++-3.8
+    - export CC=clang-3.8
+    - git submodule update --init --recursive
+    - mkdir build-clang-tidy
+    - cd build-clang-tidy
+    - cmake ..
+    - make -j8 lint
+
+# Clang-Format
+clang-format:
+  script:
+    - export BOOST_ROOT=/opt/boost_1_60_0-clang-3.8
+    - git submodule update --init --recursive
+    - mkdir build-clang-format
+    - cd build-clang-format
+    - cmake ..
+    - make format-check
