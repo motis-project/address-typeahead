@@ -1,7 +1,7 @@
 project(address-typeahead)
 cmake_minimum_required(VERSION 2.8)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  # required for clang-format
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  # required for clang-tidy
 set(compiler-flags "-std=c++14 -Wall -Wextra -Werror")
 
 
