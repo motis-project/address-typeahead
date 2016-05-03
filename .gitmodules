@@ -1,3 +1,9 @@
 [submodule "external_lib/osmium"]
 	path = external_lib/osmium
 	url = git@git.motis-project.de:lib/osmium.git
+[submodule "external_lib/googletest"]
+	path = external_lib/googletest
+	url = git@git.motis-project.de:lib/googletest.git
+[submodule "external_lib/guess"]
+	path = external_lib/guess
+	url = git@git.motis-project.de:lib/guess.git
