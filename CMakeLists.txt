@@ -9,6 +9,7 @@ set(compiler-flags "-std=c++14 -Wall -Wextra -Werror")
 # Dependencies
 ################################
 find_package(ZLIB REQUIRED)
+find_package(Threads)
 
 add_subdirectory(external_lib/googletest/googletest EXCLUDE_FROM_ALL)
 add_subdirectory(external_lib/expat EXCLUDE_FROM_ALL)
@@ -27,7 +28,7 @@ include_directories(SYSTEM external_lib/guess/include)
 ################################
 file(GLOB_RECURSE address-typeahead-files src/*.cc)
 add_library(address-typeahead ${address-typeahead-files})
-target_link_libraries(address-typeahead ${ZLIB_LIBRARIES} expat guess)
+target_link_libraries(address-typeahead ${ZLIB_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} expat guess)
 set_target_properties(address-typeahead PROPERTIES COMPILE_FLAGS ${compiler-flags})
 
 
