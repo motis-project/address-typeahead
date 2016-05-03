@@ -11,10 +11,8 @@ using namespace guess;
 
 namespace address_typeahead {
 
-std::vector<std::string> lines(std::string const& input_path) {
+std::vector<std::string> lines(std::istream& in) {
   std::vector<std::string> l;
-  std::fstream in(input_path);
-  in.exceptions(std::ifstream::failbit);
   std::string line;
   while (!in.eof() && in.peek() != EOF) {
     std::getline(in, line);
@@ -23,8 +21,7 @@ std::vector<std::string> lines(std::string const& input_path) {
   return l;
 }
 
-typeahead::typeahead(std::string const& input_path)
-    : names_(lines(input_path)), guesser_(names_) {}
+typeahead::typeahead(std::istream& in) : names_(lines(in)), guesser_(names_) {}
 
 std::vector<std::string> typeahead::complete(std::string const& user_input) {
   std::vector<std::string> guesses;

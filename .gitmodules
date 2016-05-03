@@ -7,3 +7,6 @@
 [submodule "external_lib/guess"]
 	path = external_lib/guess
 	url = git@git.motis-project.de:lib/guess.git
+[submodule "external_lib/expat"]
+	path = external_lib/expat
+	url = git@git.motis-project.de:lib/expat.git

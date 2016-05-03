@@ -11,11 +11,13 @@ set(compiler-flags "-std=c++14 -Wall -Wextra -Werror")
 find_package(ZLIB REQUIRED)
 
 add_subdirectory(external_lib/googletest/googletest EXCLUDE_FROM_ALL)
+add_subdirectory(external_lib/expat EXCLUDE_FROM_ALL)
 add_subdirectory(external_lib/guess EXCLUDE_FROM_ALL)
 
 include_directories(include)
 include_directories(${ZLIB_INCLUDE_DIRS})
 include_directories(SYSTEM external_lib/googletest/googletest/include)
+include_directories(SYSTEM external_lib/expat/include)
 include_directories(SYSTEM external_lib/osmium/include)
 include_directories(SYSTEM external_lib/guess/include)
 
@@ -25,7 +27,7 @@ include_directories(SYSTEM external_lib/guess/include)
 ################################
 file(GLOB_RECURSE address-typeahead-files src/*.cc)
 add_library(address-typeahead ${address-typeahead-files})
-target_link_libraries(address-typeahead ${ZLIB_LIBRARIES})
+target_link_libraries(address-typeahead ${ZLIB_LIBRARIES} expat guess)
 set_target_properties(address-typeahead PROPERTIES COMPILE_FLAGS ${compiler-flags})
 
 
@@ -34,7 +36,7 @@ set_target_properties(address-typeahead PROPERTIES COMPILE_FLAGS ${compiler-flag
 ################################
 file(GLOB_RECURSE at-example-files example/*.cc)
 add_executable(at-example ${at-example-files})
-target_link_libraries(at-example address-typeahead guess)
+target_link_libraries(at-example address-typeahead)
 set_target_properties(at-example PROPERTIES COMPILE_FLAGS ${compiler-flags})
 
 

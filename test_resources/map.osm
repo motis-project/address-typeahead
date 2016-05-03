@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="CGImap 0.4.0 (23450 thorn-02.openstreetmap.org)" copyright="OpenStreetMap and contributors" attribution="http://www.openstreetmap.org/copyright" license="http://opendatacommons.org/licenses/odbl/1-0/">
+ <bounds minlat="49.8766000" minlon="8.6552400" maxlat="49.8787600" maxlon="8.6577400"/>
+ <node id="343635512" visible="true" version="5" changeset="10662655" timestamp="2012-02-12T12:59:53Z" user="dschuwa" uid="55687" lat="49.8771194" lon="8.6555184"/>
+ <node id="4040669641" visible="true" version="1" changeset="37615379" timestamp="2016-03-04T19:39:20Z" user="z∈ℂ" uid="361219" lat="49.8772380" lon="8.6558575"/>
+ <node id="3263977320" visible="true" version="1" changeset="27845792" timestamp="2015-01-01T18:17:14Z" user="kgplayerc" uid="1029052" lat="49.8773592" lon="8.6562042"/>
+ <node id="34335504" visible="true" version="2" changeset="1020850" timestamp="2009-04-29T21:28:31Z" user="uboot" uid="26299" lat="49.8773965" lon="8.6563108"/>
+ <node id="343635500" visible="true" version="5" changeset="11695785" timestamp="2012-05-25T07:05:45Z" user="AlexPleiner" uid="61927" lat="49.8775924" lon="8.6568705"/>
+ <way id="150032798" visible="true" version="6" changeset="37615379" timestamp="2016-03-04T19:39:24Z" user="z∈ℂ" uid="361219">
+  <nd ref="343635512"/>
+  <nd ref="4040669641"/>
+  <nd ref="3263977320"/>
+  <nd ref="343635504"/>
+  <nd ref="343635500"/>
+  <tag k="highway" v="living_street"/>
+  <tag k="name" v="Hochschulstraße"/>
+ </way>
+</osm>

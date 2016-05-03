@@ -8,7 +8,7 @@
 namespace address_typeahead {
 
 struct typeahead {
-  typeahead(std::string const& input_path);
+  typeahead(std::istream&);
   std::vector<std::string> complete(std::string const& user_input);
 
 private:

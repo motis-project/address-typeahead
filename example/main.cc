@@ -1,12 +1,15 @@
 #include <chrono>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 
 #include "address-typeahead/extractor.h"
 #include "address-typeahead/typeahead.h"
 
 void typeahead(std::string const& input_file) {
-  address_typeahead::typeahead t(input_file);
+  std::ifstream in(input_file);
+  in.exceptions(std::ios_base::failbit);
+  address_typeahead::typeahead t(in);
 
   std::string user_input;
   while (std::cout << "$ " && std::getline(std::cin, user_input)) {
@@ -27,7 +30,8 @@ void typeahead(std::string const& input_file) {
 
 int main(int argc, char* argv[]) {
   if (argc == 4 && strcmp(argv[1], "extract") == 0) {
-    address_typeahead::extract(argv[2], argv[3]);
+    std::ofstream out(argv[3]);
+    address_typeahead::extract(argv[2], out);
   } else if (argc == 3 && strcmp(argv[1], "typeahead") == 0) {
     typeahead(argv[2]);
   } else {

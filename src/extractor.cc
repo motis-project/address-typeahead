@@ -3,6 +3,7 @@
 
 #include "osmium/handler.hpp"
 #include "osmium/io/pbf_input.hpp"
+#include "osmium/io/xml_input.hpp"
 #include "osmium/memory/buffer.hpp"
 #include "osmium/osm.hpp"
 #include "osmium/visitor.hpp"
@@ -14,7 +15,8 @@ public:
   void way(osmium::Way const& w) {
     auto const highway = w.tags()["highway"];
     auto const name = w.tags()["name"];
-    if (highway && strcmp(highway, "residential") == 0 && name) {
+    if (highway && name && (strcmp(highway, "residential") == 0 ||
+                            strcmp(highway, "living_street") == 0)) {
       names_.emplace_back(w.tags()["name"]);
     }
   }
@@ -23,17 +25,17 @@ public:
 };
 
 template <typename H>
-void apply(std::string const& pbf, H& handler) {
-  osmium::io::Reader reader(pbf);
+void apply(osmium::io::File const& path, H& handler) {
+  osmium::io::Reader reader(path);
   osmium::apply(reader, handler);
 }
 
-void extract(std::string const& input_path, std::string const& output_path) {
-  street_extractor node_counter;
-  apply(input_path, node_counter);
+void extract(std::string const& input_path, std::ostream& out) {
+  auto extractor = street_extractor();
+  auto const path = osmium::io::File(input_path);
+  apply(path, extractor);
 
-  std::ofstream out(output_path);
-  for (auto const& name : node_counter.names_) {
+  for (auto const& name : extractor.names_) {
     out << name << "\n";
   }
 }
