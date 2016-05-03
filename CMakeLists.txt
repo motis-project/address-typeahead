@@ -76,4 +76,4 @@ add_custom_target(lint
   COMMENT "Running clang-tidy"
   VERBATIM
 )
-add_dependencies(lint address-typeahead)
+add_dependencies(lint address-typeahead at-test at-example)

@@ -1,0 +1,52 @@
+variables:
+  ASAN_SYMBOLIZER_PATH: "/usr/bin/llvm-symbolizer"
+
+# GCC 5 production
+gcc-5-release:
+  script:
+    - export BOOST_ROOT=/opt/boost_1_60_0-gcc-5
+    - git submodule update --init --recursive
+    - mkdir -p build-gcc-5
+    - cd build-gcc-5
+    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - make -j8 at-test at-example
+    - ./at-test
+
+# Clang 3.8 debug with address sanitizer
+clang-3.8-debug-asan:
+  script:
+    - export CXXFLAGS="-fsanitize=address -fno-omit-frame-pointer"
+    - export BOOST_ROOT=/opt/boost_1_60_0-clang-3.8
+    - export CXX=clang++-3.8
+    - export CC=clang-3.8
+    - git submodule update --init --recursive
+    - mkdir -p build-asan
+    - cd build-asan
+    - cmake -DCMAKE_BUILD_TYPE=Debug ..
+    - make -j8 at-test at-example
+    - ./at-test
+
+# Clang 3.8 debug with thread sanitizer
+clang-3.8-debug-tsan:
+  script:
+    - export CXXFLAGS="-fsanitize=thread -fno-omit-frame-pointer"
+    - export BOOST_ROOT=/opt/boost_1_60_0-clang-3.8
+    - export CXX=clang++-3.8
+    - export CC=clang-3.8
+    - git submodule update --init --recursive
+    - mkdir -p build-tsan
+    - cd build-tsan
+    - cmake -DCMAKE_BUILD_TYPE=Debug ..
+    - make -j8 at-test at-example
+    - ./at-test
+
+# GCC 5 debug valgrind
+gcc-5-debug-valgrind:
+  script:
+    - export BOOST_ROOT=/opt/boost_1_60_0-gcc-5
+    - git submodule update --init --recursive
+    - mkdir -p build-gcc-5-valgrind
+    - cd build-gcc-5-valgrind
+    - cmake -DCMAKE_BUILD_TYPE=Debug ..
+    - make -j8 at-test at-example
+    - valgrind ./at-test
