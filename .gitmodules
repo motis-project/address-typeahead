@@ -10,3 +10,6 @@
 [submodule "external_lib/expat"]
 	path = external_lib/expat
 	url = git@git.motis-project.de:lib/expat.git
+[submodule "external_lib/zlib"]
+	path = external_lib/zlib
+	url = git@git.motis-project.de:lib/zlib.git
