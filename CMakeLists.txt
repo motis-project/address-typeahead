@@ -27,6 +27,8 @@ include_directories(SYSTEM external_lib/expat/include)
 include_directories(SYSTEM external_lib/osmium/include)
 include_directories(SYSTEM external_lib/guess/include)
 include_directories(SYSTEM external_lib/zlib)
+include_directories(SYSTEM external_lib/protozero/include)
+include_directories(SYSTEM external_lib/boost)
 
 
 ################################
@@ -77,12 +79,12 @@ add_custom_target(format-check
 ################################
 add_custom_target(lint
   /usr/bin/python
-    ${CMAKE_CURRENT_SOURCE_DIR}/tools/run-clang-tidy.py
-      -exit-on-error
-      -header-filter "^${CMAKE_CURRENT_SOURCE_DIR}(include/)"
-      "^${CMAKE_CURRENT_SOURCE_DIR}/include/"
-      "^${CMAKE_CURRENT_SOURCE_DIR}/src/"
-      "^${CMAKE_CURRENT_SOURCE_DIR}/test/"
+	${CMAKE_CURRENT_SOURCE_DIR}/tools/run-clang-tidy.py
+	  -exit-on-error
+	  -header-filter "^${CMAKE_CURRENT_SOURCE_DIR}(include/)"
+	  "^${CMAKE_CURRENT_SOURCE_DIR}/include/"
+	  "^${CMAKE_CURRENT_SOURCE_DIR}/src/"
+	  "^${CMAKE_CURRENT_SOURCE_DIR}/test/"
   COMMENT "Running clang-tidy"
   VERBATIM
 )

@@ -7,8 +7,8 @@
 
 using namespace address_typeahead;
 
-TEST(simple, simple) {
-  std::stringstream out;
-  extract("../test_resources/map.osm", out);
-  EXPECT_EQ("Hochschulstraße", typeahead(out).complete("Hoch").at(0));
-}
+//TEST(simple, simple) {
+  //std::stringstream out;
+  //extract("../test_resources/map.osm", out);
+  //EXPECT_EQ("Hochschulstraße", typeahead(out).complete("Hoch").at(0));
+//}
