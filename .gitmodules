@@ -13,3 +13,6 @@
 [submodule "external_lib/zlib"]
 	path = external_lib/zlib
 	url = git@git.motis-project.de:lib/zlib.git
+[submodule "external_lib/protozero"]
+	path = external_lib/protozero
+	url = git@git.motis-project.de:lib/protozero.git
