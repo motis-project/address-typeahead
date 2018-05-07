@@ -1,8 +1,5 @@
 #pragma once
 
-#include <istream>
-#include <ostream>
-
 #include "address-typeahead/common.h"
 
 namespace address_typeahead {

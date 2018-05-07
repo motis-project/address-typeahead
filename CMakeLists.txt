@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  # required for clang-tidy
 
 if (NOT MSVC)
-  set(compiler-flags "-std=c++14 -Wall -Wextra -Werror")
+	set(compiler-flags "-std=c++14 -Wall -Werror")# -Wextra
 else()
   set(compiler-flags "-DNOMINMAX -DXML_STATIC")
 endif()
@@ -19,6 +19,7 @@ add_subdirectory(external_lib/googletest/googletest EXCLUDE_FROM_ALL)
 add_subdirectory(external_lib/expat EXCLUDE_FROM_ALL)
 add_subdirectory(external_lib/guess EXCLUDE_FROM_ALL)
 add_subdirectory(external_lib/zlib EXCLUDE_FROM_ALL)
+add_subdirectory(external_lib/boost EXCLUDE_FROM_ALL)
 
 include_directories(include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/external_lib/zlib)
@@ -28,7 +29,7 @@ include_directories(SYSTEM external_lib/osmium/include)
 include_directories(SYSTEM external_lib/guess/include)
 include_directories(SYSTEM external_lib/zlib)
 include_directories(SYSTEM external_lib/protozero/include)
-include_directories(SYSTEM external_lib/boost)
+include_directories(SYSTEM external_lib/boost/include)
 
 
 ################################
@@ -39,7 +40,7 @@ add_library(address-typeahead ${address-typeahead-files})
 if (MSVC)
   target_link_libraries(address-typeahead ws2_32)
 endif()
-target_link_libraries(address-typeahead guess zlibstatic expat ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(address-typeahead guess zlibstatic expat boost_serialization ${CMAKE_THREAD_LIBS_INIT})
 set_target_properties(address-typeahead PROPERTIES COMPILE_FLAGS ${compiler-flags})
 
 
