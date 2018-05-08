@@ -23,7 +23,7 @@ std::vector<std::string> lines(std::istream& in) {
 
 typeahead::typeahead(std::istream& in) : names_(lines(in)), guesser_(names_) {}
 
-typeahead::typeahead(std::vector<std::string> const& strings)
+typeahead::typeahead(std::vector<std::string> const strings)
     : names_(strings), guesser_(names_) {}
 
 std::vector<std::string> typeahead::complete(std::string const& user_input) {

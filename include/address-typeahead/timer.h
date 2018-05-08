@@ -7,9 +7,9 @@ namespace address_typeahead {
 
 struct timer {
 
-  timer(void) : start_time_(std::chrono::system_clock::now()) {}
+  timer() : start_time_(std::chrono::system_clock::now()) {}
 
-  void elapsed_time_ms(void) {
+  void elapsed_time_ms() {
     using std::chrono::system_clock;
     using std::chrono::duration_cast;
     using std::chrono::milliseconds;
@@ -18,7 +18,7 @@ struct timer {
     std::cout << duration.count() << "ms\n";
   }
 
-  void elapsed_time_s(void) {
+  void elapsed_time_s() {
     using std::chrono::system_clock;
     using std::chrono::duration_cast;
     using std::chrono::seconds;

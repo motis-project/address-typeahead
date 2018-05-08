@@ -32,7 +32,7 @@ place const* typeahead_context::get_place(std::string const& place_name) const {
 
 std::vector<uint32_t> typeahead_context::get_area_ids(point const& p) const {
   auto results = std::vector<uint32_t>();
-  if (rtree_.size() == 0) {
+  if (rtree_.empty()) {
     return results;
   }
 
@@ -40,7 +40,7 @@ std::vector<uint32_t> typeahead_context::get_area_ids(point const& p) const {
   auto const query_box = box(p, p);
   rtree_.query(bgi::intersects(query_box), std::back_inserter(query_list));
 
-  if (query_list.size() != 0) {
+  if (!query_list.empty()) {
     for (auto const& query_result : query_list) {
       auto const& area_it = areas_.find(query_result.second);
       if (bg::within(p, area_it->second.mpolygon_)) {
@@ -49,7 +49,7 @@ std::vector<uint32_t> typeahead_context::get_area_ids(point const& p) const {
     }
   }
 
-  if (results.size() == 0) {
+  if (results.empty()) {
     rtree_.query(bgi::nearest(p, 1), std::back_inserter(query_list));
     results.push_back(query_list[0].second);
   }
@@ -113,7 +113,7 @@ std::vector<std::string> typeahead_context::get_housenumbers(
   return results;
 }
 
-std::vector<std::string> typeahead_context::get_all_place_names(void) const {
+std::vector<std::string> typeahead_context::get_all_place_names() const {
   auto results = std::vector<std::string>();
   results.reserve(places_.size());
   for (auto const& pl : places_) {

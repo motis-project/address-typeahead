@@ -54,7 +54,7 @@ struct address {
   point coordinates_;
   std::string house_number_;
 
-  address(void) {}
+  address() {}
   address(point const& coords, char const* const house_number)
       : coordinates_(coords) {
     if (house_number == nullptr) {
@@ -75,7 +75,7 @@ struct typeahead_context {
   std::map<uint32_t, area> areas_;
   bgi::rtree<value, bgi::linear<16>> rtree_;
 
-  std::vector<std::string> get_all_place_names(void) const;
+  std::vector<std::string> get_all_place_names() const;
   place const* get_place(std::string const& place_name) const;
 
   std::vector<uint32_t> get_area_ids(point const& p) const;

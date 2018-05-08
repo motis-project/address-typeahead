@@ -30,7 +30,9 @@ public:
   void area(osmium::Area const& n) {
     auto const name_tag = n.tags()["name"];
     auto const postal_code_tag = n.tags()["postal_code"];
-    if (!name_tag && !postal_code_tag) return;
+    if (!name_tag && !postal_code_tag) {
+      return;
+    }
 
     std::string name;
     uint32_t level;
@@ -92,7 +94,9 @@ public:
 
   void way(osmium::Way const& w) {
     auto const name = w.tags()["name"];
-    if (!name || w.nodes().empty()) return;
+    if (!name || w.nodes().empty()) {
+      return;
+    }
 
     auto const& n = w.nodes()[0];
     auto const coords = point(n.location().x(), n.location().y());
