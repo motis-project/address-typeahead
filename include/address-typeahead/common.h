@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <map>
 #include <string>
 #include <vector>
 
@@ -14,8 +13,6 @@
 
 namespace address_typeahead {
 
-uint64_t hash_string(std::string const& s);
-
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
 
@@ -24,7 +21,7 @@ typedef bg::model::box<point> box;
 typedef bg::model::ring<point, false, true> ring;
 typedef bg::model::polygon<point, false, true> polygon;
 typedef bg::model::multi_polygon<polygon> multi_polygon;
-typedef std::pair<box, size_t> value;
+typedef std::pair<box, uint64_t> value;
 
 uint32_t const ADMIN_LEVEL_0(1);
 uint32_t const ADMIN_LEVEL_1(1 << 1);
@@ -40,51 +37,58 @@ uint32_t const DMIN_LEVEL_10(1 << 10);
 uint32_t const ADMIN_LEVEL_11(1 << 11);
 uint32_t const ADMIN_LEVEL_12(1 << 12);
 uint32_t const ADMIN_LEVEL_MAX(ADMIN_LEVEL_12);
-uint32_t const POSTCODE(1 << 31);
+uint32_t const POSTCODE(1 << 13);
 
 struct area {
   std::string name_;
   uint32_t level_;
-  multi_polygon mpolygon_;
 
   bool operator<(area const& other) const { return level_ < other.level_; }
 };
 
-struct address {
+struct location {
   point coordinates_;
-  std::string house_number_;
+  std::string name_;
+  std::vector<uint64_t> areas_;
 
-  address() {}
-  address(point const& coords, char const* const house_number)
-      : coordinates_(coords) {
-    if (house_number == nullptr) {
-      house_number_ = "";
-    } else {
-      house_number_ = house_number;
-    }
-  }
+  bool operator<(location const& other) const { return name_ < other.name_; }
 };
 
-struct place {
+struct house_number {
   std::string name_;
-  std::vector<address> addresses_;
+  point coordinates_;
+};
+
+struct street {
+  std::string name_;
+  std::vector<house_number> house_numbers_;
+  std::vector<uint64_t> areas_;
 };
 
 struct typeahead_context {
-  std::map<uint32_t, place> places_;
-  std::map<uint32_t, area> areas_;
-  bgi::rtree<value, bgi::linear<16>> rtree_;
 
-  std::vector<std::string> get_all_place_names() const;
-  place const* get_place(std::string const& place_name) const;
+  std::vector<location> places_;
+  std::vector<street> streets_;
+  std::vector<area> areas_;
 
-  std::vector<uint32_t> get_area_ids(point const& p) const;
-  std::vector<uint32_t> get_area_ids(place const& pl) const;
-  std::vector<uint32_t> get_area_ids_filtered(place const& pl,
-                                              uint32_t const levels) const;
+  bool get_coordinates(size_t id, double& lat, double& lon) const;
 
-  std::vector<std::string> get_area_names_sorted(place const& pl) const;
-  std::vector<std::string> get_housenumbers(place const& pl) const;
+  bool coordinates_for_house_number(size_t id, std::string house_number,
+                                    double& lat, double& lon) const;
+
+  std::vector<size_t> get_area_ids(size_t id,
+                                   uint32_t const levels = 0xffffffff) const;
+
+  std::string get_name(size_t id) const;
+  std::vector<std::string> get_all_names() const;
+  std::vector<std::string> get_area_names(
+      size_t id, uint32_t const levels = 0xffffffff) const;
+  std::vector<std::string> get_area_names_sorted(
+      size_t id, uint32_t const levels = 0xffffffff) const;
+  std::vector<std::string> get_house_numbers(size_t id) const;
+
+  bool is_place(size_t id) const;
+  bool is_street(size_t id) const;
 };
 
-}  // address_typeahead
+}  // namespace address_typeahead

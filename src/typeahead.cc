@@ -1,35 +1,55 @@
 #include "address-typeahead/typeahead.h"
 
-#include <chrono>
-#include <fstream>
-#include <iostream>
-#include <iterator>
-
-#include "guess/guesser.h"
+#include <algorithm>
 
 using namespace guess;
 
 namespace address_typeahead {
 
-std::vector<std::string> lines(std::istream& in) {
-  std::vector<std::string> l;
-  std::string line;
-  while (!in.eof() && in.peek() != EOF) {
-    std::getline(in, line);
-    l.push_back(line);
+typeahead::typeahead(typeahead_context const context)
+    : context_(context), names_(context_.get_all_names()), guesser_(names_) {}
+
+std::vector<size_t> typeahead::complete(std::string const& name,
+                                        std::vector<std::string> const& areas,
+                                        uint32_t const levels,
+                                        size_t max_results) const {
+  auto const max_matches = size_t(400);
+
+  auto matches = guesser_.guess_threshold(name, 0.1, 10);
+  matches.resize(std::min(matches.size(), max_matches));
+
+  if (areas.empty()) {
+    auto guesses = std::vector<size_t>();
+    for (size_t i = 0; i != std::min(max_results, matches.size()); ++i) {
+      auto const& match = matches[i];
+      guesses.push_back(match.index_);
+    }
+    return guesses;
   }
-  return l;
-}
 
-typeahead::typeahead(std::istream& in) : names_(lines(in)), guesser_(names_) {}
+  auto const w1 = double(0.5);
+  auto const w2 = double(1.0 - w1);
+  for (auto& match : matches) {
+    auto const area_names = context_.get_area_names(match.index_, levels);
+    guess::guesser gsr(area_names);
 
-typeahead::typeahead(std::vector<std::string> const strings)
-    : names_(strings), guesser_(names_) {}
+    auto sum = double(0);
+    for (auto const& a : areas) {
+      auto const area_matches = gsr.guess_threshold(a, 0, 10);
+      if (!area_matches.empty()) {
+        sum += area_matches[0].cos_sim_;
+      }
+    }
 
-std::vector<std::string> typeahead::complete(std::string const& user_input) {
-  std::vector<std::string> guesses;
-  for (auto const& index : guesser_.guess(user_input, 10)) {
-    guesses.push_back(names_[index]);
+    match.cos_sim_ = match.cos_sim_ * w1 + (sum / areas.size()) * w2;
+  }
+
+  std::sort(std::begin(matches), std::end(matches));
+
+  auto guesses = std::vector<size_t>();
+  for (size_t i = 0; i != std::min(max_results, matches.size()); ++i) {
+    auto const& match = matches[i];
+    guesses.push_back(match.index_);
   }
   return guesses;
 }
