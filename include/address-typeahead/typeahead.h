@@ -18,9 +18,7 @@ struct typeahead {
                                uint32_t const levels = 0xffffffff,
                                size_t max_results = 10) const;
 
-private:
   typeahead_context context_;
-  std::vector<std::string> names_;
   guess::guesser guesser_;
 };
 

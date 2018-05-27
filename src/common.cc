@@ -2,18 +2,6 @@
 
 namespace address_typeahead {
 
-void remove_duplicates(std::vector<std::string>& values) {
-  for (size_t i = 0; i < values.size(); ++i) {
-    for (size_t j = i + 1; j < values.size(); ++j) {
-      if (values[i] == values[j]) {
-        auto const& it = values.begin() + j;
-        values.erase(it);
-        --j;
-      }
-    }
-  }
-}
-
 bool typeahead_context::get_coordinates(size_t id, double& lat,
                                         double& lon) const {
   if (is_place(id)) {
@@ -91,6 +79,19 @@ std::vector<std::string> typeahead_context::get_all_names() const {
   return results;
 }
 
+std::vector<std::pair<std::string, float>>
+typeahead_context::get_all_names_weighted() const {
+  auto results = std::vector<std::pair<std::string, float>>();
+  results.reserve(places_.size() + streets_.size());
+  for (auto const& pl : places_) {
+    results.emplace_back(pl.name_, 1);
+  }
+  for (auto const& str : streets_) {
+    results.emplace_back(str.name_, 1);
+  }
+  return results;
+}
+
 std::vector<std::string> typeahead_context::get_area_names(
     size_t id, uint32_t const levels) const {
   auto result = std::vector<std::string>();
@@ -99,7 +100,19 @@ std::vector<std::string> typeahead_context::get_area_names(
     for (auto const& area_id : area_ids) {
       result.emplace_back(areas_[area_id].name_);
     }
-    remove_duplicates(result);
+  }
+  return result;
+}
+
+std::vector<std::pair<std::string, float>>
+typeahead_context::get_area_names_weighted(size_t id,
+                                           uint32_t const levels) const {
+  auto result = std::vector<std::pair<std::string, float>>();
+  if (is_place(id) || is_street(id)) {
+    auto const& area_ids = get_area_ids(id, levels);
+    for (auto const& area_id : area_ids) {
+      result.emplace_back(areas_[area_id].name_, areas_[area_id].popularity_);
+    }
   }
   return result;
 }

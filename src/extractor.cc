@@ -28,6 +28,9 @@ namespace address_typeahead {
 
 class geometry_handler : public osmium::handler::Handler {
 public:
+  explicit geometry_handler(std::vector<address_typeahead::area>& areas)
+      : areas_(areas), population_sum_(0) {}
+
   void area(osmium::Area const& n) {
     auto const name_tag = n.tags()["name"];
     auto const postal_code_tag = n.tags()["postal_code"];
@@ -36,6 +39,15 @@ public:
     }
 
     address_typeahead::area a;
+    auto const population_tag = n.tags()["population"];
+    if (population_tag) {
+      auto const population = atol(population_tag);
+      a.popularity_ = static_cast<float>(population);
+      population_sum_ += population;
+    } else {
+      a.popularity_ = 0;
+    }
+
     if (name_tag) {
       auto const admin_level_tag = n.tags()["admin_level"];
       if (!admin_level_tag) {
@@ -81,8 +93,9 @@ public:
     polygons_.push_back(mp);
   }
 
-  std::vector<address_typeahead::area> areas_;
+  std::vector<address_typeahead::area>& areas_;
   std::vector<multi_polygon> polygons_;
+  uint64_t population_sum_;
 };
 
 class place_extractor : public osmium::handler::Handler {
@@ -97,8 +110,8 @@ public:
 
     for (auto const& tag : w.tags()) {
       if (!filter_(tag)) {
-		  return;
-	  }
+        return;
+      }
     }
 
     auto const name = std::string(w.tags()["name"]);
@@ -122,8 +135,8 @@ public:
   void node(osmium::Node const& n) {
     for (auto const& tag : n.tags()) {
       if (!filter_(tag)) {
-		  return;
-	  }
+        return;
+      }
     }
 
     location loc;
@@ -321,9 +334,8 @@ void compress_streets(
   }
 }
 
-void extract(std::string const& input_path, typeahead_context& context,
-             osmium::TagsFilter const& filter, bool exact) {
-
+typeahead_context extract(std::string const& input_path,
+                          osmium::TagsFilter const& filter, bool exact) {
   osmium::io::File input_file(input_path);
 
   osmium::area::Assembler::config_type assembler_config;
@@ -346,8 +358,9 @@ void extract(std::string const& input_path, typeahead_context& context,
 
   // second pass : read all objects & run them first through the node location
   // handler and then the multipolygon collector
+  typeahead_context context;
   osmium::io::Reader reader(input_file);
-  auto geom_handler = geometry_handler();
+  auto geom_handler = geometry_handler(context.areas_);
   osmium::apply(
       reader, location_handler,
       mp_manager.handler([&geom_handler](osmium::memory::Buffer&& buffer) {
@@ -355,8 +368,10 @@ void extract(std::string const& input_path, typeahead_context& context,
       }));
   reader.close();
 
-  for (auto const& area_it : geom_handler.areas_) {
-    context.areas_.emplace_back(area_it);
+  auto const inv_population_sum =
+      1.0 / static_cast<double>(geom_handler.population_sum_);
+  for (auto& area : context.areas_) {
+    area.popularity_ = 1.0 + area.popularity_ * inv_population_sum;
   }
 
   bgi::rtree<value, bgi::linear<16>> rtree;
@@ -379,6 +394,8 @@ void extract(std::string const& input_path, typeahead_context& context,
     }
   }
   compress_streets(context, place_handler.streets_);
+
+  return context;
 }
 
 }  // namespace address_typeahead

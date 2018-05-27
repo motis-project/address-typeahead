@@ -6,7 +6,7 @@
 
 namespace address_typeahead {
 
-void extract(std::string const& input_path, typeahead_context& context,
-             osmium::TagsFilter const& filter, bool exact = false);
+typeahead_context extract(std::string const& input_path,
+                          osmium::TagsFilter const& filter, bool exact = false);
 
 }  // namespace address_typeahead

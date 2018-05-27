@@ -35,6 +35,7 @@ void serialize(Archive& ar, address_typeahead::area& a,
                unsigned int const version) {
   ar& a.name_;
   ar& a.level_;
+  ar& a.popularity_;
 }
 
 template <class Archive>

@@ -8,8 +8,9 @@
 #include "address-typeahead/common.h"
 #include "address-typeahead/extractor.h"
 #include "address-typeahead/serialization.h"
-#include "address-typeahead/timer.h"
 #include "address-typeahead/typeahead.h"
+
+#include "timer.h"
 
 std::string get_place_string(
     size_t id, address_typeahead::typeahead_context const& context) {
@@ -133,7 +134,6 @@ void typeahead(std::string const& input_file) {
 void extract(std::string const& input_path, std::ofstream& out) {
   auto ti = address_typeahead::timer();
 
-  address_typeahead::typeahead_context context;
   osmium::TagsFilter filter(true);
   filter.add_rule(false, "traffic_sign");
   filter.add_rule(false, "barrier");
@@ -146,7 +146,8 @@ void extract(std::string const& input_path, std::ofstream& out) {
   filter.add_rule(false, "amenity", "parking");
   filter.add_rule(false, "landuse", "garages");
 
-  address_typeahead::extract(input_path, context, filter, true);
+  address_typeahead::typeahead_context context =
+      address_typeahead::extract(input_path, filter, true);
   ti.elapsed_time_s();
 
   boost::archive::binary_oarchive oa(out);

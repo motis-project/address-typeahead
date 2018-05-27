@@ -42,6 +42,7 @@ uint32_t const POSTCODE(1 << 13);
 struct area {
   std::string name_;
   uint32_t level_;
+  float popularity_;
 
   bool operator<(area const& other) const { return level_ < other.level_; }
 };
@@ -81,7 +82,10 @@ struct typeahead_context {
 
   std::string get_name(size_t id) const;
   std::vector<std::string> get_all_names() const;
+  std::vector<std::pair<std::string, float>> get_all_names_weighted() const;
   std::vector<std::string> get_area_names(
+      size_t id, uint32_t const levels = 0xffffffff) const;
+  std::vector<std::pair<std::string, float>> get_area_names_weighted(
       size_t id, uint32_t const levels = 0xffffffff) const;
   std::vector<std::string> get_area_names_sorted(
       size_t id, uint32_t const levels = 0xffffffff) const;

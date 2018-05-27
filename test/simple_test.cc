@@ -30,7 +30,7 @@ public:
     filter.add_rule(false, "amenity", "parking");
     filter.add_rule(false, "landuse", "garages");
 
-    extract("../test_resources/bremen.osm.pbf", context_, filter, true);
+    context_ = extract("../test_resources/bremen.osm.pbf", filter, true);
     typeahead_ = typeahead(context_);
   }
 
@@ -52,8 +52,8 @@ TEST(Test, test_get_area_names) {
   auto const& candidates =
       test_env->typeahead_.complete("test", std::vector<std::string>());
   auto const areas = test_env->context_.get_area_names_sorted(candidates.at(5));
-  EXPECT_EQ(2, areas.size());
-  EXPECT_EQ("Mitte-Nord", areas.at(0));
+  EXPECT_EQ(5, areas.size());
+  EXPECT_EQ("Bremen", areas.at(0));
 }
 
 TEST(Test, test_loading) {
@@ -75,5 +75,5 @@ TEST(Test, test_loading) {
 
   areas.push_back("nord");
   candidates = t.complete("test", areas);
-  EXPECT_EQ("Vogelnest", context.get_name(candidates.at(2)));
+  EXPECT_EQ("Yesterday", context.get_name(candidates.at(2)));
 }

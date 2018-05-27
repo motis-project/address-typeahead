@@ -9,160 +9,159 @@
 #include <vector>
 
 #include "guess/string_util.h"
+#include "guess/trigram_util.h"
 
 namespace guess {
 
-guesser::guesser(std::vector<std::pair<std::string, double>> const& candidates)
-    : candidates_(candidates) {
-  normalize_all_candidates();
+unsigned trigram_match_count(std::string const& in, std::string const& candidate) {
+  auto matches = 0u;
+  for_each_trigram(in, [&](auto&& in_trigram) {
+    auto cont = true;
+    for_each_trigram(candidate, [&](auto&& candidate_trigram) {
+      if (cont && in_trigram == candidate_trigram) {
+        ++matches;
+        cont = false;
+      }
+    });
+  });
+  return matches;
 }
 
-guesser::guesser(std::vector<std::string> const& candidates) {
+guesser::guesser(
+    std::vector<std::pair<std::string, float>> const& candidates) {
+  index_.resize(max_compressed_trigram + 1);
+  match_sqrts_.resize(candidates.size());
   candidates_.resize(candidates.size());
-  std::transform(begin(candidates), end(candidates), begin(candidates_),
-                 [](std::string const& c) { return std::make_pair(c, 0.0); });
-  normalize_all_candidates();
-}
 
-void guesser::normalize_all_candidates() {
-  for (auto& candidate : candidates_) {
-    normalize(candidate.first);
+  for (auto i = 0u; i < candidates.size(); ++i) {
+    candidates_[i] = candidates[i];
+
+    auto& str = candidates_[i].first;
+    normalize(str);
+    match_sqrts_[i] = static_cast<float>(std::sqrt(str.size() - 2));
+    for_each_trigram(str, [&](auto&& t) { index_[t].push_back(i); });
+    str.shrink_to_fit();
+  }
+
+  match_sqrts_.shrink_to_fit();
+  candidates_.shrink_to_fit();
+  index_.shrink_to_fit();
+  for (auto& match_indices : index_) {
+    std::sort(begin(match_indices), end(match_indices));
+    match_indices.erase(std::unique(begin(match_indices), end(match_indices)),
+                        end(match_indices));
+    match_indices.shrink_to_fit();
   }
 }
 
 std::vector<int> guesser::guess(std::string in, int count) const {
-  auto matches = match_trigrams(in);
-  score_exact_word_matches(in, matches);
-
-  std::sort(std::begin(matches), std::end(matches));
-  matches.resize(std::min(static_cast<std::size_t>(count), matches.size()));
-
-  std::vector<int> ret(matches.size());
-  for (int i = 0; i < matches.size(); ++i) {
-    ret[i] = matches[i].index_;
-  }
-
-  return ret;
-}
-
-std::vector<guesser::match> guesser::guess_threshold(std::string in,
-                                                     double threshold,
-                                                     int min) const {
-  auto matches = match_trigrams(in);
-  score_exact_word_matches(in, matches);
-  std::sort(std::begin(matches), std::end(matches));
-
-  if (threshold == 0) {
-    matches.resize(std::min(static_cast<size_t>(min), matches.size()));
-    return matches;
-  }
-
-  auto ret = std::vector<match>();
-  for (size_t i = 0; i < matches.size(); ++i) {
-    if (matches[i].cos_sim_ < threshold && ret.size() > min) {
-      break;
-    }
-    ret.emplace_back(matches[i]);
-  }
-
-  return ret;
-}
-
-std::vector<guesser::match> guesser::match_trigrams(std::string& in) const {
-  std::vector<match> matches;
-  matches.reserve(candidates_.size());
-  for (int i = 0; i < candidates_.size(); ++i) {
-    matches.emplace_back(i);
-  }
-
   normalize(in);
 
-  char const* input = in.c_str();
-  double sqrt_len_vec_input = std::sqrt(in.size() - 2);
+  // Collect candidate indices matched by the trigrams in the input string.
+  std::vector<unsigned> match_indices;
+  match_indices.reserve(512);
+  for_each_trigram(in, [&](auto&& trigram_input) {
+    match_indices.insert(end(match_indices), begin(index_[trigram_input]),
+                         end(index_[trigram_input]));
+  });
 
-  char trigram_input[4] = {0};
-  char trigram_candidate[4] = {0};
+  // Score the trigram matches on the candidates.
+  std::vector<uint8_t> match_counts(candidates_.size());
+  for (auto const& i : match_indices) {
+    ++match_counts[i];
+  }
 
-  for (int i = 0; i < candidates_.size(); ++i) {
-    int match_count = 0;
-    const auto len_vec_candidate = candidates_[i].first.length() - 2;
+  // Calculate cosine-similarity.
+  std::vector<guesser::match> m;
+  m.reserve(512);
+  auto const sqrt_len_vec_in = static_cast<float>(std::sqrt(in.size() - 2));
+  for (auto i = 1u; i < candidates_.size(); ++i) {
+    if (match_counts[i] != 0) {
+      auto const match_count = trigram_match_count(in, candidates_[i].first);
+      m.emplace_back(i, candidates_[i].second * match_count /
+                            (sqrt_len_vec_in * match_sqrts_[i]));
 
-    char const* substr_input = input;
-    while (substr_input[2] != '\0') {
-      trigram_input[0] = substr_input[0];
-      trigram_input[1] = substr_input[1];
-      trigram_input[2] = substr_input[2];
-      ++substr_input;
-
-      char const* substr_candidate = candidates_[i].first.c_str();
-      while (substr_candidate[2] != '\0') {
-        trigram_candidate[0] = substr_candidate[0];
-        trigram_candidate[1] = substr_candidate[1];
-        trigram_candidate[2] = substr_candidate[2];
-        ++substr_candidate;
-
-        if (*(uint32_t*)trigram_input == *(uint32_t*)trigram_candidate) {
-          ++match_count;
-          break;
-        }
+      // Score exact word match.
+      if (m.back().cos_sim > 0.5) {
+        for_each_token(candidates_[m.back().index].first, [&](char* t1) {
+          for_each_token(in, [&](char* t2) {
+            if (strcmp(t1, t2) == 0) {
+              m.back().cos_sim *= 1.33f;
+              return true;
+            }
+            return false;
+          });
+          return false;
+        });
       }
     }
-
-    double denominator = sqrt_len_vec_input * std::sqrt(len_vec_candidate);
-    matches[i].cos_sim_ = match_count / denominator;
   }
 
-  return matches;
-}
+  // Sort matches by cosine-similarity.
+  auto result_count = std::min(static_cast<std::size_t>(count), m.size());
+  std::nth_element(begin(m), begin(m) + result_count, end(m));
+  m.resize(result_count);
+  std::sort(begin(m), end(m));
 
-void guesser::score_exact_word_matches(std::string& in,
-                                       std::vector<match>& matches) const {
-  for (int i = 0; i < matches.size(); ++i) {
-    auto& candidate = candidates_[matches[i].index_].first;
-    for_each_token(in, [&](char* input_token) {
-      for_each_token(candidate, [&](char* candidate_token) {
-        if (strcmp(candidate_token, input_token) == 0) {
-          matches[i].cos_sim_ *= 1.33;
-          return true;
-        }
-        return false;
-      });
-      return false;
-    });
+  // Translate to indices.
+  std::vector<int> ret(m.size());
+  for (int i = 0; i < m.size(); ++i) {
+    ret[i] = m[i].index;
   }
-  std::sort(std::begin(matches), std::end(matches));
+
+  return ret;
 }
 
-void guesser::normalize(std::string& s) {
-  replace_all(s, "è", "e");
-  replace_all(s, "é", "e");
-  replace_all(s, "Ä", "a");
-  replace_all(s, "ä", "a");
-  replace_all(s, "Ö", "o");
-  replace_all(s, "ö", "o");
-  replace_all(s, "Ü", "u");
-  replace_all(s, "ü", "u");
-  replace_all(s, "ß", "ss");
-  replace_all(s, "-", " ");
-  replace_all(s, "/", " ");
-  replace_all(s, ".", " ");
-  replace_all(s, ",", " ");
-  replace_all(s, "(", " ");
-  replace_all(s, ")", " ");
+std::vector<guesser::match> guesser::guess_match(std::string in, int count) const {
+  normalize(in);
 
-  for (int i = 0; i < s.length(); ++i) {
-    char c = s[i];
-    bool is_number = c >= '0' && c <= '9';
-    bool is_lower_case_char = c >= 'a' && c <= 'z';
-    bool is_upper_case_char = c >= 'A' && c <= 'Z';
-    if (!is_number && !is_lower_case_char && !is_upper_case_char) {
-      s[i] = ' ';
+  // Collect candidate indices matched by the trigrams in the input string.
+  std::vector<unsigned> match_indices;
+  match_indices.reserve(512);
+  for_each_trigram(in, [&](auto&& trigram_input) {
+    match_indices.insert(end(match_indices), begin(index_[trigram_input]),
+                         end(index_[trigram_input]));
+  });
+
+  // Score the trigram matches on the candidates.
+  std::vector<uint8_t> match_counts(candidates_.size());
+  for (auto const& i : match_indices) {
+    ++match_counts[i];
+  }
+
+  // Calculate cosine-similarity.
+  std::vector<guesser::match> m;
+  m.reserve(512);
+  auto const sqrt_len_vec_in = static_cast<float>(std::sqrt(in.size() - 2));
+  for (auto i = 1u; i < candidates_.size(); ++i) {
+    if (match_counts[i] != 0) {
+      auto const match_count = trigram_match_count(in, candidates_[i].first);
+      m.emplace_back(i, candidates_[i].second * match_count /
+                            (sqrt_len_vec_in * match_sqrts_[i]));
+
+      // Score exact word match.
+      if (m.back().cos_sim > 0.5) {
+        for_each_token(candidates_[m.back().index].first, [&](char* t1) {
+          for_each_token(in, [&](char* t2) {
+            if (strcmp(t1, t2) == 0) {
+              m.back().cos_sim *= 1.33f;
+              return true;
+            }
+            return false;
+          });
+          return false;
+        });
+      }
     }
   }
 
-  replace_all(s, "  ", " ");
+  // Sort matches by cosine-similarity.
+  auto result_count = std::min(static_cast<std::size_t>(count), m.size());
+  std::nth_element(begin(m), begin(m) + result_count, end(m));
+  m.resize(result_count);
+  std::sort(begin(m), end(m));
 
-  std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+  return m;
 }
 
 }  // namespace guess
