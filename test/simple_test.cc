@@ -42,9 +42,9 @@ test_environment* const test_env = dynamic_cast<test_environment*>(
 
 TEST(Test, test_typeahead) {
   auto const& result =
-      test_env->typeahead_.complete("test", std::vector<std::string>());
+      test_env->typeahead_.complete("testc", std::vector<std::string>());
 
-  EXPECT_EQ("West", test_env->context_.get_name(result.at(0)));
+  EXPECT_EQ("Testcenter", test_env->context_.get_name(result.at(0)));
 }
 
 TEST(Test, test_get_area_names) {
@@ -80,14 +80,17 @@ TEST(Test, test_loading) {
 }
 
 TEST(Test, test_house_numbers) {
-  auto const& result =
-      test_env->typeahead_.complete("gartenstr", std::vector<std::string>());
+  std::vector<std::string> areas;
+  areas.emplace_back("nord");
+  auto const& result = test_env->typeahead_.complete("gartenstr", areas);
 
   auto const house_numbers = test_env->context_.get_house_numbers(result.at(0));
   EXPECT_EQ("13", house_numbers[0]);
 
   double lat, lon;
-  test_env->context_.coordinates_for_house_number(result.at(0), "13", lat, lon);
+  bool success = test_env->context_.coordinates_for_house_number(
+      result.at(0), "13", lat, lon);
+  ASSERT_TRUE(success);
   EXPECT_NEAR(53.5534, lat, 0.001);
   EXPECT_NEAR(8.57153, lon, 0.001);
 }
