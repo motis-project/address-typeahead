@@ -39,6 +39,11 @@ uint32_t const ADMIN_LEVEL_12(1 << 12);
 uint32_t const ADMIN_LEVEL_MAX(ADMIN_LEVEL_12);
 uint32_t const POSTCODE(1 << 13);
 
+struct coordinates {
+  int32_t lon_;
+  int32_t lat_;
+};
+
 struct area {
   std::string name_;
   uint32_t level_;
@@ -48,7 +53,7 @@ struct area {
 };
 
 struct location {
-  point coordinates_;
+  coordinates coordinates_;
   std::string name_;
   std::vector<uint64_t> areas_;
 
@@ -57,7 +62,7 @@ struct location {
 
 struct house_number {
   std::string name_;
-  point coordinates_;
+  coordinates coordinates_;
 };
 
 struct street {

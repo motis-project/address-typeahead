@@ -6,13 +6,13 @@ bool typeahead_context::get_coordinates(size_t id, double& lat,
                                         double& lon) const {
   if (is_place(id)) {
     auto const& loc = places_[id];
-    lon = loc.coordinates_.get<0>() / 10000000.0;
-    lat = loc.coordinates_.get<1>() / 10000000.0;
+    lon = loc.coordinates_.lon_ / 10000000.0;
+    lat = loc.coordinates_.lat_ / 10000000.0;
     return true;
   } else if (is_street(id)) {
     auto const& loc = streets_[id - places_.size()].house_numbers_[0];
-    lon = loc.coordinates_.get<0>() / 10000000.0;
-    lat = loc.coordinates_.get<1>() / 10000000.0;
+    lon = loc.coordinates_.lon_ / 10000000.0;
+    lat = loc.coordinates_.lat_ / 10000000.0;
     return true;
   }
   return false;
@@ -29,8 +29,8 @@ bool typeahead_context::coordinates_for_house_number(size_t id,
   auto const& str = streets_[id - places_.size()];
   for (auto const& hn : str.house_numbers_) {
     if (hn.name_ == house_number) {
-      lon = hn.coordinates_.get<0>() / 10000000.0;
-      lat = hn.coordinates_.get<1>() / 10000000.0;
+      lon = hn.coordinates_.lon_ / 10000000.0;
+      lat = hn.coordinates_.lat_ / 10000000.0;
       return true;
     }
   }

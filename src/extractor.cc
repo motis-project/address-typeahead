@@ -117,8 +117,8 @@ public:
     auto const name = std::string(w.tags()["name"]);
     if (name.length() >= 3) {
       location loc;
-      loc.coordinates_ =
-          point(w.nodes()[0].location().x(), w.nodes()[0].location().y());
+      loc.coordinates_ = {w.nodes()[0].location().x(),
+                          w.nodes()[0].location().y()};
       loc.name_ = "";
 
       auto const& street_it = streets_.find(name);
@@ -140,7 +140,7 @@ public:
     }
 
     location loc;
-    loc.coordinates_ = point(n.location().x(), n.location().y());
+    loc.coordinates_ = {n.location().x(), n.location().y()};
 
     if (n.tags()["addr:housenumber"] && n.tags()["addr:street"]) {
 
@@ -216,6 +216,8 @@ void compress_streets(
     typeahead_context& context,
     std::unordered_map<std::string, std::vector<location>>& streets) {
   for (auto& str_it : streets) {
+    // there is only one entry with this name in the map so simply add
+    // a new street/place
     if (str_it.second.size() == 1) {
       if (str_it.second[0].name_ == "") {
         location loc;
@@ -246,6 +248,7 @@ void compress_streets(
         ++num_of_places;
       }
 
+      // we only want one place entry for every (name, areas) pair
       auto places = std::vector<location>();
       for (size_t i = 0; i != num_of_places; ++i) {
         auto const& loc_i = str_it.second[i];
@@ -273,6 +276,8 @@ void compress_streets(
                                places.end());
       } else {
 
+        // now test if the places are truly unique or if they share the same
+        // areas with a street
         auto house_numbers = std::vector<location>();
         for (size_t i = num_of_places; i != str_it.second.size(); ++i) {
           house_numbers.emplace_back(str_it.second[i]);
@@ -292,7 +297,8 @@ void compress_streets(
           }
         }
 
-        std::vector<street> unique_streets;
+        // find all separate streets
+        auto unique_streets = std::vector<street>();
         for (auto const& loc : house_numbers) {
           bool found = false;
           for (auto& ustr : unique_streets) {
@@ -380,6 +386,7 @@ typeahead_context extract(std::string const& input_path,
     rtree.insert(std::make_pair(b, i));
   }
 
+  // extract the streets and places
   osmium::io::Reader reader2(
       input_file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way,
       osmium::io::read_meta::no);
@@ -390,7 +397,8 @@ typeahead_context extract(std::string const& input_path,
   for (auto& str_it : place_handler.streets_) {
     for (auto& loc : str_it.second) {
       loc.areas_ =
-          get_area_ids(loc.coordinates_, rtree, geom_handler.polygons_, exact);
+          get_area_ids(point(loc.coordinates_.lon_, loc.coordinates_.lat_),
+                       rtree, geom_handler.polygons_, exact);
     }
   }
   compress_streets(context, place_handler.streets_);

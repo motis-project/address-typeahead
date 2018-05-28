@@ -2,8 +2,7 @@
 #include <fstream>
 #include <iostream>
 
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
+#include <cereal/archives/binary.hpp>
 
 #include "address-typeahead/common.h"
 #include "address-typeahead/extractor.h"
@@ -113,8 +112,10 @@ void typeahead(std::string const& input_file) {
   in.exceptions(std::ios_base::failbit);
 
   address_typeahead::typeahead_context context;
-  boost::archive::binary_iarchive ia(in);
-  ia >> context;
+  {
+    cereal::BinaryInputArchive ia(in);
+    ia(context);
+  }
 
   address_typeahead::typeahead t(context);
 
@@ -150,8 +151,10 @@ void extract(std::string const& input_path, std::ofstream& out) {
       address_typeahead::extract(input_path, filter, true);
   ti.elapsed_time_s();
 
-  boost::archive::binary_oarchive oa(out);
-  oa << context;
+  {
+    cereal::BinaryOutputArchive oa(out);
+    oa(context);
+  }
 }
 
 int main(int argc, char* argv[]) {

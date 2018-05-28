@@ -1,73 +1,39 @@
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/string.hpp>
-#include <boost/serialization/vector.hpp>
+#include <cereal/cereal.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
 
 #include "common.h"
 
-namespace boost {
-namespace serialization {
+namespace address_typeahead {
 
 template <class Archive>
-void save(Archive& ar, address_typeahead::point const& p,
-          unsigned int const version) {
-  ar& p.get<0>();
-  ar& p.get<1>();
+void serialize(Archive& archive, coordinates& c) {
+  archive(c.lon_, c.lat_);
 }
 
 template <class Archive>
-void load(Archive& ar, address_typeahead::point& p,
-          unsigned int const version) {
-  int32_t x, y;
-  ar& x;
-  ar& y;
-  p.set<0>(x);
-  p.set<1>(y);
+void serialize(Archive& archive, area& a) {
+  archive(a.name_, a.level_, a.popularity_);
 }
 
 template <class Archive>
-void serialize(Archive& ar, address_typeahead::point& p,
-               unsigned int const version) {
-  split_free(ar, p, version);
+void serialize(Archive& archive, location& l) {
+  archive(l.coordinates_, l.name_, l.areas_);
 }
 
 template <class Archive>
-void serialize(Archive& ar, address_typeahead::area& a,
-               unsigned int const version) {
-  ar& a.name_;
-  ar& a.level_;
-  ar& a.popularity_;
+void serialize(Archive& archive, house_number& hn) {
+  archive(hn.name_, hn.coordinates_);
 }
 
 template <class Archive>
-void serialize(Archive& ar, address_typeahead::location& l,
-               unsigned int const version) {
-  ar& l.coordinates_;
-  ar& l.name_;
-  ar& l.areas_;
+void serialize(Archive& archive, street& s) {
+  archive(s.name_, s.house_numbers_, s.areas_);
 }
 
 template <class Archive>
-void serialize(Archive& ar, address_typeahead::house_number& hn,
-               unsigned int const version) {
-  ar& hn.name_;
-  ar& hn.coordinates_;
+void serialize(Archive& archive, typeahead_context& tc) {
+  archive(tc.places_, tc.streets_, tc.areas_);
 }
 
-template <class Archive>
-void serialize(Archive& ar, address_typeahead::street& s,
-               unsigned int const version) {
-  ar& s.name_;
-  ar& s.house_numbers_;
-  ar& s.areas_;
-}
-
-template <class Archive>
-void serialize(Archive& ar, address_typeahead::typeahead_context& context,
-               unsigned int const version) {
-  ar& context.places_;
-  ar& context.streets_;
-  ar& context.areas_;
-}
-
-}  // namespace serialization
-}  // namespace boost
+}  // namespace address_typeahead

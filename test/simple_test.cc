@@ -1,10 +1,9 @@
 #include <fstream>
 #include <sstream>
 
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
+#include <gtest/gtest.h>
 
-#include "gtest/gtest.h"
+#include <cereal/archives/binary.hpp>
 
 #include "address-typeahead/common.h"
 #include "address-typeahead/extractor.h"
@@ -59,8 +58,10 @@ TEST(Test, test_get_area_names) {
 TEST(Test, test_loading) {
   std::ifstream in("../test_resources/out.map", std::ios::binary);
   address_typeahead::typeahead_context context;
-  boost::archive::binary_iarchive ia(in);
-  ia >> context;
+  {
+    cereal::BinaryInputArchive ia(in);
+    ia(context);
+  }
 
   EXPECT_EQ(1729, context.streets_.size());
   EXPECT_EQ(18409, context.places_.size());
@@ -76,4 +77,17 @@ TEST(Test, test_loading) {
   areas.push_back("nord");
   candidates = t.complete("test", areas);
   EXPECT_EQ("Yesterday", context.get_name(candidates.at(2)));
+}
+
+TEST(Test, test_house_numbers) {
+  auto const& result =
+      test_env->typeahead_.complete("gartenstr", std::vector<std::string>());
+
+  auto const house_numbers = test_env->context_.get_house_numbers(result.at(0));
+  EXPECT_EQ("13", house_numbers[0]);
+
+  double lat, lon;
+  test_env->context_.coordinates_for_house_number(result.at(0), "13", lat, lon);
+  EXPECT_NEAR(53.5534, lat, 0.001);
+  EXPECT_NEAR(8.57153, lon, 0.001);
 }
