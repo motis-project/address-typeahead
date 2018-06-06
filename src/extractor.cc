@@ -211,8 +211,7 @@ std::vector<index_t> get_area_ids(
   }
 
   auto query_list = std::vector<value>();
-  auto const query_box = box(p, p);
-  rtree.query(bgi::intersects(query_box), std::back_inserter(query_list));
+  rtree.query(bgi::contains(p), std::back_inserter(query_list));
 
   if (exact) {
     for (auto const& query_result : query_list) {
@@ -404,9 +403,9 @@ typeahead_context extract(std::string const& input_path,
     area.popularity_ = 1.0 + area.popularity_ * inv_population_sum;
   }
 
-  bgi::rtree<value, bgi::linear<16>> rtree;
+  auto rtree = bgi::rtree<value, bgi::linear<16>>();
   for (index_t i = 0; i != geom_handler.polygons_.size(); ++i) {
-    box b = bg::return_envelope<box>(geom_handler.polygons_[i]);
+    auto const b = bg::return_envelope<box>(geom_handler.polygons_[i]);
     rtree.insert(std::make_pair(b, i));
   }
 
