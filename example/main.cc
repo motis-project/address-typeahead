@@ -1,6 +1,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 #include <cereal/archives/binary.hpp>
 
@@ -15,86 +16,61 @@ std::string get_place_string(
     size_t id, address_typeahead::typeahead_context const& context) {
   std::string result = "";
   result += context.get_name(id) + " { ";
-  auto const areas = context.get_area_names_sorted(id);
+  auto const areas = context.get_area_names(id);
   for (auto const& a : areas) {
     result += a + ", ";
   }
   result += " }";
+
+  auto const house_numbers = context.get_house_numbers(id);
+  if (!house_numbers.empty()) {
+    result += " { ";
+    for (auto const& hn : house_numbers) {
+      result += hn + ", ";
+    }
+    result += " }";
+  }
+
   return result;
 }
 
-std::vector<size_t> parse_string_and_complete(
+std::vector<address_typeahead::index_t> parse_string_and_complete(
     std::string const& str, address_typeahead::typeahead const& t,
     address_typeahead::typeahead_context const& context) {
 
-  // expected string format :
-  // name followed by areas (comma separated) and/or a house number
-  // (indicated by :., :? or :integer)
+  auto ss = std::stringstream(str);
+  auto sub_strings = std::vector<std::string>();
+  auto buf = std::string();
 
-  int state = 0;
-  int str_begin = 0;
+  while (ss >> buf) {
+    sub_strings.emplace_back(buf);
+  }
 
-  char buffer[256] = {0};
-  std::string name = "";
-  std::vector<std::string> areas;
-  std::string house_number = "";
-
-  for (size_t i = 0; i != str.length(); ++i) {
-    if (state == 0) {  // name
-      if (str[i + 1] == '\0') {
-        name = str;
-      } else if (str[i + 1] == ',' || str[i + 1] == ':') {
-        state = 3;
-        memset(buffer, 0, sizeof(buffer));
-        strncpy(buffer, str.c_str(), i + 1 - str_begin);
-        name = buffer;
-      }
-    } else if (state == 1) {  // area
-      if (str[i + 1] == '\0' || str[i + 1] == ',' || str[i + 1] == ':') {
-        memset(buffer, 0, sizeof(buffer));
-        strncpy(buffer, &str.c_str()[str_begin], i + 1 - str_begin);
-        areas.push_back(std::string(buffer));
-        state = 3;
-      }
-    } else if (state == 2) {  // house number
-      if (str[i + 1] == '\0' || str[i + 1] == ',') {
-        memset(buffer, 0, sizeof(buffer));
-        strncpy(buffer, &str.c_str()[str_begin], i + 1 - str_begin);
-        house_number = buffer;
-        state = 3;
-      }
+  auto house_number = std::string("");
+  auto str_it = std::begin(sub_strings);
+  while (str_it != std::end(sub_strings)) {
+    auto const num = std::atol(str_it->c_str());
+    if (*str_it == "." || (num && num <= 9999)) {
+      house_number = *str_it;
+      str_it = sub_strings.erase(str_it);
     } else {
-      if (str[i] != ' ' && str[i] != ':' && str[i] != ',') {
-        state = 1;
-        str_begin = i;
-      } else if (str[i] == ':') {
-        state = 2;
-        str_begin = i + 1;
-      }
+      ++str_it;
     }
   }
 
-  auto const candidates = t.complete(name, areas);
+  if (sub_strings.size() == 0) {
+    return std::vector<address_typeahead::index_t>();
+  }
+
+  auto const candidates = t.complete(sub_strings, 10);
 
   if (house_number != "") {
-    if (house_number == "?") {
-      auto const house_numbers = context.get_house_numbers(candidates[0]);
-      if (!context.is_street(candidates[0])) {
-        std::cout << "top match is not a street" << std::endl;
-      } else {
-        std::cout << "house numbers for top match : { ";
-        for (auto const& hn : house_numbers) {
-          std::cout << hn << ", ";
-        }
-        std::cout << " }" << std::endl;
-      }
-    } else if (house_number == ".") {
-      double lon, lat;
+    double lon, lat;
+    if (house_number == ".") {
       if (context.get_coordinates(candidates[0], lat, lon)) {
         std::cout << "coordinates : " << lat << ", " << lon << std::endl;
       }
     } else {
-      double lon, lat;
       if (context.coordinates_for_house_number(candidates[0], house_number, lat,
                                                lon)) {
         std::cout << "coordinates : " << lat << ", " << lon << std::endl;
@@ -146,6 +122,7 @@ void extract(std::string const& input_path, std::ofstream& out) {
   filter.add_rule(false, "amenity", "waste_disposal");
   filter.add_rule(false, "amenity", "parking");
   filter.add_rule(false, "landuse", "garages");
+  filter.add_rule(false, "natural", "tree");
 
   address_typeahead::typeahead_context context =
       address_typeahead::extract(input_path, filter, true);

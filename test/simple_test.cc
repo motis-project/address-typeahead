@@ -17,19 +17,11 @@ public:
   test_environment() : typeahead_(typeahead_context()) {}
 
   void SetUp() override {
-    osmium::TagsFilter filter(true);
-    filter.add_rule(false, "traffic_sign");
-    filter.add_rule(false, "barrier");
-    filter.add_rule(false, "aeroway");
-    filter.add_rule(false, "waterway");
-    filter.add_rule(false, "train");
-    filter.add_rule(false, "tram");
-    filter.add_rule(false, "railway");
-    filter.add_rule(false, "amenity", "waste_disposal");
-    filter.add_rule(false, "amenity", "parking");
-    filter.add_rule(false, "landuse", "garages");
-
-    context_ = extract("../test_resources/bremen.osm.pbf", filter, true);
+    {
+      std::ifstream in("../test_resources/out.map", std::ios::binary);
+      cereal::BinaryInputArchive ia(in);
+      ia(context_);
+    }
     typeahead_ = typeahead(context_);
   }
 
@@ -41,16 +33,18 @@ test_environment* const test_env = dynamic_cast<test_environment*>(
     ::testing::AddGlobalTestEnvironment(new test_environment));
 
 TEST(Test, test_typeahead) {
-  auto const& result =
-      test_env->typeahead_.complete("testc", std::vector<std::string>());
+  auto string_vec = std::vector<std::string>();
+  string_vec.emplace_back("testc");
+  auto const& result = test_env->typeahead_.complete(string_vec);
 
   EXPECT_EQ("Testcenter", test_env->context_.get_name(result.at(0)));
 }
 
 TEST(Test, test_get_area_names) {
-  auto const& candidates =
-      test_env->typeahead_.complete("test", std::vector<std::string>());
-  auto const areas = test_env->context_.get_area_names_sorted(candidates.at(5));
+  auto string_vec = std::vector<std::string>();
+  string_vec.emplace_back("test");
+  auto const& candidates = test_env->typeahead_.complete(string_vec);
+  auto const areas = test_env->context_.get_area_names(candidates.at(5));
   EXPECT_EQ(5, areas.size());
   EXPECT_EQ("Bremen", areas.at(0));
 }
@@ -64,25 +58,27 @@ TEST(Test, test_loading) {
   }
 
   EXPECT_EQ(1729, context.streets_.size());
-  EXPECT_EQ(18409, context.places_.size());
+  EXPECT_EQ(18376, context.places_.size());
 
   auto t = typeahead(context);
-  auto areas = std::vector<std::string>();
-  auto candidates = t.complete("test", areas);
-  auto area_names = context.get_area_names_sorted(candidates.at(0));
-  EXPECT_EQ("Testcenter", context.get_name(candidates.at(1)));
+  auto string_vec = std::vector<std::string>();
+  string_vec.emplace_back("testce");
+  auto candidates = t.complete(string_vec);
+  auto area_names = context.get_area_names(candidates.at(0));
+  EXPECT_EQ("Testcenter", context.get_name(candidates.at(0)));
   EXPECT_EQ(5, area_names.size());
-  EXPECT_EQ("Lehe", area_names.at(3));
+  EXPECT_EQ("Bremen", area_names.at(0));
 
-  areas.push_back("nord");
-  candidates = t.complete("test", areas);
-  EXPECT_EQ("Yesterday", context.get_name(candidates.at(2)));
+  string_vec.emplace_back("27568");
+  candidates = t.complete(string_vec);
+  EXPECT_EQ("Festma", context.get_name(candidates.at(1)));
 }
 
 TEST(Test, test_house_numbers) {
-  std::vector<std::string> areas;
-  areas.emplace_back("nord");
-  auto const& result = test_env->typeahead_.complete("gartenstr", areas);
+  auto string_vec = std::vector<std::string>();
+  string_vec.emplace_back("gartenstr");
+  string_vec.emplace_back("nord");
+  auto const& result = test_env->typeahead_.complete(string_vec);
 
   auto const house_numbers = test_env->context_.get_house_numbers(result.at(0));
   EXPECT_EQ("13", house_numbers[0]);

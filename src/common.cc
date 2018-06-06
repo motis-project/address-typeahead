@@ -2,7 +2,7 @@
 
 namespace address_typeahead {
 
-bool typeahead_context::get_coordinates(size_t id, double& lat,
+bool typeahead_context::get_coordinates(index_t id, double& lat,
                                         double& lon) const {
   if (is_place(id)) {
     auto const& loc = places_[id];
@@ -18,7 +18,7 @@ bool typeahead_context::get_coordinates(size_t id, double& lat,
   return false;
 }
 
-bool typeahead_context::coordinates_for_house_number(size_t id,
+bool typeahead_context::coordinates_for_house_number(index_t id,
                                                      std::string house_number,
                                                      double& lat,
                                                      double& lon) const {
@@ -28,7 +28,7 @@ bool typeahead_context::coordinates_for_house_number(size_t id,
 
   auto const& str = streets_[id - places_.size()];
   for (auto const& hn : str.house_numbers_) {
-    if (hn.name_ == house_number) {
+    if (house_numbers_[hn.hn_idx_] == house_number) {
       lon = hn.coordinates_.lon_ / 10000000.0;
       lat = hn.coordinates_.lat_ / 10000000.0;
       return true;
@@ -37,9 +37,9 @@ bool typeahead_context::coordinates_for_house_number(size_t id,
   return false;
 }
 
-std::vector<size_t> typeahead_context::get_area_ids(
-    size_t id, uint32_t const levels) const {
-  auto result = std::vector<size_t>();
+std::vector<index_t> typeahead_context::get_area_ids(
+    index_t id, uint32_t const levels) const {
+  auto result = std::vector<index_t>();
   if (is_place(id)) {
     for (auto const& area_id : places_[id].areas_) {
       auto const& a = areas_[area_id];
@@ -58,67 +58,26 @@ std::vector<size_t> typeahead_context::get_area_ids(
   return result;
 }
 
-std::string typeahead_context::get_name(size_t id) const {
+std::string typeahead_context::get_name(index_t id) const {
   if (is_place(id)) {
-    return places_[id].name_;
+    return names_[places_[id].name_idx_];
   } else if (is_street(id)) {
-    return streets_[id - places_.size()].name_;
+    return names_[streets_[id - places_.size()].name_idx_];
   }
   return "";
 }
 
-std::vector<std::string> typeahead_context::get_all_names() const {
-  auto results = std::vector<std::string>();
-  results.reserve(places_.size() + streets_.size());
-  for (auto const& pl : places_) {
-    results.emplace_back(pl.name_);
+index_t typeahead_context::get_name_id(index_t id) const {
+  if (is_place(id)) {
+    return places_[id].name_idx_;
+  } else if (is_street(id)) {
+    return streets_[id - places_.size()].name_idx_;
   }
-  for (auto const& str : streets_) {
-    results.emplace_back(str.name_);
-  }
-  return results;
-}
-
-std::vector<std::pair<std::string, float>>
-typeahead_context::get_all_names_weighted() const {
-  auto results = std::vector<std::pair<std::string, float>>();
-  results.reserve(places_.size() + streets_.size());
-  for (auto const& pl : places_) {
-    results.emplace_back(pl.name_, 1);
-  }
-  for (auto const& str : streets_) {
-    results.emplace_back(str.name_, 1);
-  }
-  return results;
+  return 0;
 }
 
 std::vector<std::string> typeahead_context::get_area_names(
-    size_t id, uint32_t const levels) const {
-  auto result = std::vector<std::string>();
-  if (is_place(id) || is_street(id)) {
-    auto const& area_ids = get_area_ids(id, levels);
-    for (auto const& area_id : area_ids) {
-      result.emplace_back(areas_[area_id].name_);
-    }
-  }
-  return result;
-}
-
-std::vector<std::pair<std::string, float>>
-typeahead_context::get_area_names_weighted(size_t id,
-                                           uint32_t const levels) const {
-  auto result = std::vector<std::pair<std::string, float>>();
-  if (is_place(id) || is_street(id)) {
-    auto const& area_ids = get_area_ids(id, levels);
-    for (auto const& area_id : area_ids) {
-      result.emplace_back(areas_[area_id].name_, areas_[area_id].popularity_);
-    }
-  }
-  return result;
-}
-
-std::vector<std::string> typeahead_context::get_area_names_sorted(
-    size_t id, uint32_t const levels) const {
+    index_t id, uint32_t const levels) const {
   auto result = std::vector<std::string>();
   if (is_place(id) || is_street(id)) {
     auto const& area_ids = get_area_ids(id, levels);
@@ -131,33 +90,37 @@ std::vector<std::string> typeahead_context::get_area_names_sorted(
 
     for (size_t i = 0; i != areas.size(); ++i) {
       auto const& area_i = areas[i];
-      if (i + 1 != areas.size() && areas[i + 1].name_ == area_i.name_) {
+      if (i + 1 != areas.size() && areas[i + 1].name_idx_ == area_i.name_idx_) {
         continue;
       }
-
-      result.emplace_back(area_i.name_);
+      if (area_i.level_ != POSTCODE) {
+        result.emplace_back(area_names_[area_i.name_idx_]);
+      } else {
+        result.emplace_back(std::to_string(area_i.name_idx_));
+      }
     }
   }
   return result;
 }
 
-std::vector<std::string> typeahead_context::get_house_numbers(size_t id) const {
+std::vector<std::string> typeahead_context::get_house_numbers(
+    index_t id) const {
   auto result = std::vector<std::string>();
 
   if (is_street(id)) {
     auto const& str = streets_[id - places_.size()];
     for (auto const& hn : str.house_numbers_) {
-      result.emplace_back(hn.name_);
+      result.emplace_back(house_numbers_[hn.hn_idx_]);
     }
   }
   return result;
 }
 
-bool typeahead_context::is_place(size_t id) const {
+bool typeahead_context::is_place(index_t id) const {
   return id < places_.size();
 }
 
-bool typeahead_context::is_street(size_t id) const {
+bool typeahead_context::is_street(index_t id) const {
   return (id >= places_.size() && id < places_.size() + streets_.size());
 }
 

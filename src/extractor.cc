@@ -29,7 +29,7 @@ namespace address_typeahead {
 class geometry_handler : public osmium::handler::Handler {
 public:
   explicit geometry_handler(std::vector<address_typeahead::area>& areas)
-      : areas_(areas), population_sum_(0) {}
+      : areas_(areas), population_sum_(0), index_(0) {}
 
   void area(osmium::Area const& n) {
     auto const name_tag = n.tags()["name"];
@@ -54,7 +54,12 @@ public:
         return;
       }
 
-      a.name_ = name_tag;
+      auto name_it = names_.find(name_tag);
+      if (name_it == names_.end()) {
+        name_it = names_.emplace(name_tag, index_++).first;
+      }
+
+      a.name_idx_ = name_it->second;
       auto const admin_level = atol(admin_level_tag);
       if (admin_level > ADMIN_LEVEL_MAX) {
         return;
@@ -62,8 +67,12 @@ public:
 
       a.level_ = 1 << admin_level;
     } else {
-      a.name_ = postal_code_tag;
+      a.name_idx_ = atol(postal_code_tag);
       a.level_ = POSTCODE;
+
+      if (a.name_idx_ == 0) {
+        return;
+      }
     }
     areas_.emplace_back(a);
 
@@ -93,15 +102,20 @@ public:
     polygons_.push_back(mp);
   }
 
+  std::unordered_map<std::string, index_t> names_;
   std::vector<address_typeahead::area>& areas_;
   std::vector<multi_polygon> polygons_;
+
   uint64_t population_sum_;
+  index_t index_;
 };
 
 class place_extractor : public osmium::handler::Handler {
 public:
   explicit place_extractor(osmium::TagsFilter const& filter)
-      : filter_(filter) {}
+      : filter_(filter), hn_index_(0) {
+    house_numbers_.emplace("", hn_index_++);
+  }
 
   void way(osmium::Way const& w) {
     if (!w.tags()["name"] || w.nodes().empty()) {
@@ -119,7 +133,7 @@ public:
       location loc;
       loc.coordinates_ = {w.nodes()[0].location().x(),
                           w.nodes()[0].location().y()};
-      loc.name_ = "";
+      loc.name_idx_ = 0;
 
       auto const& street_it = streets_.find(name);
       if (street_it == streets_.end()) {
@@ -144,7 +158,12 @@ public:
 
     if (n.tags()["addr:housenumber"] && n.tags()["addr:street"]) {
 
-      loc.name_ = std::string(n.tags()["addr:housenumber"]);
+      auto house_number = std::string(n.tags()["addr:housenumber"]);
+      auto hn_it = house_numbers_.find(house_number);
+      if (hn_it == house_numbers_.end()) {
+        hn_it = house_numbers_.emplace(house_number, hn_index_++).first;
+      }
+      loc.name_idx_ = hn_it->second;
 
       auto const street_name = std::string(n.tags()["addr:street"]);
 
@@ -164,7 +183,7 @@ public:
       auto const name = std::string(n.tags()["name"]);
 
       if (name.length() >= 3) {
-        loc.name_ = "";
+        loc.name_idx_ = 0;
         auto const& street_it = streets_.find(name);
         if (street_it == streets_.end()) {
           std::vector<location> locs;
@@ -179,12 +198,14 @@ public:
 
   osmium::TagsFilter const& filter_;
   std::unordered_map<std::string, std::vector<location>> streets_;
+  std::unordered_map<std::string, index_t> house_numbers_;
+  index_t hn_index_;
 };
 
-std::vector<uint64_t> get_area_ids(
+std::vector<index_t> get_area_ids(
     point const& p, bgi::rtree<value, bgi::linear<16>> const& rtree,
     std::vector<multi_polygon> const& polygons, bool exact) {
-  auto results = std::vector<uint64_t>();
+  auto results = std::vector<index_t>();
   if (rtree.empty()) {
     return results;
   }
@@ -212,26 +233,25 @@ std::vector<uint64_t> get_area_ids(
   return results;
 }
 
-void compress_streets(
-    typeahead_context& context,
-    std::unordered_map<std::string, std::vector<location>>& streets) {
-  for (auto& str_it : streets) {
+void compress_streets(typeahead_context& context, place_extractor& pl_extr) {
+  for (auto& str_it : pl_extr.streets_) {
+    context.names_.emplace_back(str_it.first);
     // there is only one entry with this name in the map so simply add
     // a new street/place
     if (str_it.second.size() == 1) {
-      if (str_it.second[0].name_ == "") {
+      if (str_it.second[0].name_idx_ == 0) {
         location loc;
-        loc.name_ = str_it.first;
+        loc.name_idx_ = context.names_.size() - 1;
         loc.coordinates_ = str_it.second[0].coordinates_;
         loc.areas_ = str_it.second[0].areas_;
         context.places_.emplace_back(loc);
       } else {
         street str;
-        str.name_ = str_it.first;
+        str.name_idx_ = context.names_.size() - 1;
         str.areas_ = str_it.second[0].areas_;
         for (auto const& loc : str_it.second) {
           house_number hn;
-          hn.name_ = loc.name_;
+          hn.hn_idx_ = loc.name_idx_;
           hn.coordinates_ = loc.coordinates_;
           str.house_numbers_.emplace_back(hn);
         }
@@ -242,7 +262,7 @@ void compress_streets(
 
       auto num_of_places = size_t(0);
       for (auto const& loc : str_it.second) {
-        if (loc.name_ != "") {
+        if (loc.name_idx_ != 0) {
           break;
         }
         ++num_of_places;
@@ -264,7 +284,7 @@ void compress_streets(
 
         if (!found) {
           location loc;
-          loc.name_ = str_it.first;
+          loc.name_idx_ = context.names_.size() - 1;
           loc.coordinates_ = loc_i.coordinates_;
           loc.areas_ = loc_i.areas_;
           places.emplace_back(loc);
@@ -304,7 +324,7 @@ void compress_streets(
           for (auto& ustr : unique_streets) {
             if (ustr.areas_ == loc.areas_) {
               for (auto const& hn : ustr.house_numbers_) {
-                if (hn.name_ == loc.name_) {
+                if (hn.hn_idx_ == loc.name_idx_) {
                   found = true;
                   break;
                 }
@@ -312,7 +332,7 @@ void compress_streets(
 
               if (!found) {
                 house_number hn;
-                hn.name_ = loc.name_;
+                hn.hn_idx_ = loc.name_idx_;
                 hn.coordinates_ = loc.coordinates_;
                 ustr.house_numbers_.emplace_back(hn);
               }
@@ -323,10 +343,10 @@ void compress_streets(
           }
           if (!found) {
             street new_street;
-            new_street.name_ = str_it.first;
+            new_street.name_idx_ = context.names_.size() - 1;
             new_street.areas_ = loc.areas_;
             house_number hn;
-            hn.name_ = loc.name_;
+            hn.hn_idx_ = loc.name_idx_;
             hn.coordinates_ = loc.coordinates_;
             new_street.house_numbers_.emplace_back(hn);
             unique_streets.emplace_back(new_street);
@@ -363,15 +383,19 @@ typeahead_context extract(std::string const& input_path,
   location_handler.ignore_errors();
 
   // second pass : read all objects & run them first through the node location
-  // handler and then the multipolygon collector
+  // handler and then the multipolygon collector and the place extractor
   typeahead_context context;
-  osmium::io::Reader reader(input_file);
+  osmium::io::Reader reader(
+      input_file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way,
+      osmium::io::read_meta::no);
   auto geom_handler = geometry_handler(context.areas_);
+  auto place_handler = place_extractor(filter);
   osmium::apply(
       reader, location_handler,
       mp_manager.handler([&geom_handler](osmium::memory::Buffer&& buffer) {
         osmium::apply(buffer, geom_handler);
-      }));
+      }),
+      place_handler);
   reader.close();
 
   auto const inv_population_sum =
@@ -381,18 +405,10 @@ typeahead_context extract(std::string const& input_path,
   }
 
   bgi::rtree<value, bgi::linear<16>> rtree;
-  for (size_t i = 0; i != geom_handler.polygons_.size(); ++i) {
+  for (index_t i = 0; i != geom_handler.polygons_.size(); ++i) {
     box b = bg::return_envelope<box>(geom_handler.polygons_[i]);
     rtree.insert(std::make_pair(b, i));
   }
-
-  // extract the streets and places
-  osmium::io::Reader reader2(
-      input_file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way,
-      osmium::io::read_meta::no);
-  auto place_handler = place_extractor(filter);
-  osmium::apply(reader2, location_handler, place_handler);
-  reader2.close();
 
   for (auto& str_it : place_handler.streets_) {
     for (auto& loc : str_it.second) {
@@ -401,7 +417,17 @@ typeahead_context extract(std::string const& input_path,
                        rtree, geom_handler.polygons_, exact);
     }
   }
-  compress_streets(context, place_handler.streets_);
+  compress_streets(context, place_handler);
+
+  context.area_names_.resize(geom_handler.names_.size());
+  for (auto const& area_name : geom_handler.names_) {
+    context.area_names_[area_name.second] = area_name.first;
+  }
+
+  context.house_numbers_.resize(place_handler.house_numbers_.size());
+  for (auto const& hn : place_handler.house_numbers_) {
+    context.house_numbers_[hn.second] = hn.first;
+  }
 
   return context;
 }

@@ -13,27 +13,28 @@ void serialize(Archive& archive, coordinates& c) {
 
 template <class Archive>
 void serialize(Archive& archive, area& a) {
-  archive(a.name_, a.level_, a.popularity_);
+  archive(a.name_idx_, a.level_, a.popularity_);
 }
 
 template <class Archive>
 void serialize(Archive& archive, location& l) {
-  archive(l.coordinates_, l.name_, l.areas_);
+  archive(l.name_idx_, l.coordinates_, l.areas_);
 }
 
 template <class Archive>
 void serialize(Archive& archive, house_number& hn) {
-  archive(hn.name_, hn.coordinates_);
+  archive(hn.hn_idx_, hn.coordinates_);
 }
 
 template <class Archive>
 void serialize(Archive& archive, street& s) {
-  archive(s.name_, s.house_numbers_, s.areas_);
+  archive(s.name_idx_, s.house_numbers_, s.areas_);
 }
 
 template <class Archive>
 void serialize(Archive& archive, typeahead_context& tc) {
-  archive(tc.places_, tc.streets_, tc.areas_);
+  archive(tc.places_, tc.streets_, tc.areas_, tc.names_, tc.area_names_,
+          tc.house_numbers_);
 }
 
 }  // namespace address_typeahead
