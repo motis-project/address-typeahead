@@ -1,3 +1,5 @@
+#include "address-typeahead/extractor.h"
+
 #include <unordered_map>
 #include <vector>
 
@@ -204,7 +206,7 @@ public:
 
 std::vector<index_t> get_area_ids(
     point const& p, bgi::rtree<value, bgi::linear<16>> const& rtree,
-    std::vector<multi_polygon> const& polygons, bool exact) {
+    std::vector<multi_polygon> const& polygons) {
   auto results = std::vector<index_t>();
   if (rtree.empty()) {
     return results;
@@ -213,14 +215,8 @@ std::vector<index_t> get_area_ids(
   auto query_list = std::vector<value>();
   rtree.query(bgi::contains(p), std::back_inserter(query_list));
 
-  if (exact) {
-    for (auto const& query_result : query_list) {
-      if (bg::within(p, polygons[query_result.second])) {
-        results.emplace_back(query_result.second);
-      }
-    }
-  } else {
-    for (auto const& query_result : query_list) {
+  for (auto const& query_result : query_list) {
+    if (bg::within(p, polygons[query_result.second])) {
       results.emplace_back(query_result.second);
     }
   }
@@ -232,135 +228,101 @@ std::vector<index_t> get_area_ids(
   return results;
 }
 
-void compress_streets(typeahead_context& context, place_extractor& pl_extr) {
-  for (auto& str_it : pl_extr.streets_) {
-    context.names_.emplace_back(str_it.first);
-    // there is only one entry with this name in the map so simply add
-    // a new street/place
-    if (str_it.second.size() == 1) {
-      if (str_it.second[0].name_idx_ == 0) {
-        location loc;
-        loc.name_idx_ = context.names_.size() - 1;
-        loc.coordinates_ = str_it.second[0].coordinates_;
-        loc.areas_ = str_it.second[0].areas_;
-        context.places_.emplace_back(loc);
-      } else {
-        street str;
-        str.name_idx_ = context.names_.size() - 1;
-        str.areas_ = str_it.second[0].areas_;
-        for (auto const& loc : str_it.second) {
-          house_number hn;
-          hn.hn_idx_ = loc.name_idx_;
-          hn.coordinates_ = loc.coordinates_;
-          str.house_numbers_.emplace_back(hn);
-        }
-        context.streets_.emplace_back(str);
+void remove_duplicates(typeahead_context& context,
+                       place_extractor& place_handler) {
+  for (auto& place_entry : place_handler.streets_) {
+    auto const name_idx = context.names_.size();
+    context.names_.emplace_back(place_entry.first);
+
+    std::sort(place_entry.second.begin(), place_entry.second.end());
+
+    std::map<std::vector<index_t>, std::vector<std::pair<index_t, coordinates>>>
+        places;
+    for (auto& loc : place_entry.second) {
+      std::sort(loc.areas_.begin(), loc.areas_.end());
+      auto it = places.find(loc.areas_);
+      if (it == places.end()) {
+        it = places
+                 .emplace(loc.areas_,
+                          std::vector<std::pair<index_t, coordinates>>())
+                 .first;
       }
-    } else {
-      std::sort(str_it.second.begin(), str_it.second.end());
+      it->second.emplace_back(loc.name_idx_, loc.coordinates_);
+    }
 
-      auto num_of_places = size_t(0);
-      for (auto const& loc : str_it.second) {
-        if (loc.name_idx_ != 0) {
-          break;
-        }
-        ++num_of_places;
-      }
-
-      // we only want one place entry for every (name, areas) pair
-      auto places = std::vector<location>();
-      for (size_t i = 0; i != num_of_places; ++i) {
-        auto const& loc_i = str_it.second[i];
-
-        bool found = false;
-        for (size_t j = i + 1; j < num_of_places; ++j) {
-          auto const& loc_j = str_it.second[j];
-          if (loc_j.areas_ == loc_i.areas_) {
-            found = true;
-            break;
-          }
-        }
-
-        if (!found) {
-          location loc;
-          loc.name_idx_ = context.names_.size() - 1;
-          loc.coordinates_ = loc_i.coordinates_;
-          loc.areas_ = loc_i.areas_;
-          places.emplace_back(loc);
+    for (auto const& unique_place : places) {
+      std::vector<house_number> house_numbers;
+      for (size_t i = 0; i != unique_place.second.size(); ++i) {
+        auto const& loc = unique_place.second[i];
+        if (loc.first == 0 && (i + 1 == unique_place.second.size())) {
+          location new_place;
+          new_place.name_idx_ = name_idx;
+          new_place.coordinates_ = loc.second;
+          new_place.areas_ = unique_place.first;
+          context.places_.emplace_back(new_place);
+        } else if (loc.first != 0) {
+          house_numbers.emplace_back(house_number{loc.first, loc.second});
         }
       }
-
-      if (num_of_places == str_it.second.size()) {
-        context.places_.insert(context.places_.end(), places.begin(),
-                               places.end());
-      } else {
-
-        // now test if the places are truly unique or if they share the same
-        // areas with a street
-        auto house_numbers = std::vector<location>();
-        for (size_t i = num_of_places; i != str_it.second.size(); ++i) {
-          house_numbers.emplace_back(str_it.second[i]);
-        }
-
-        for (auto const& pl : places) {
-          bool found = false;
-          for (auto const& hn : house_numbers) {
-            if (hn.areas_ == pl.areas_) {
-              found = true;
-              break;
-            }
-          }
-
-          if (!found) {
-            context.places_.emplace_back(pl);
-          }
-        }
-
-        // find all separate streets
-        auto unique_streets = std::vector<street>();
-        for (auto const& loc : house_numbers) {
-          bool found = false;
-          for (auto& ustr : unique_streets) {
-            if (ustr.areas_ == loc.areas_) {
-              for (auto const& hn : ustr.house_numbers_) {
-                if (hn.hn_idx_ == loc.name_idx_) {
-                  found = true;
-                  break;
-                }
-              }
-
-              if (!found) {
-                house_number hn;
-                hn.hn_idx_ = loc.name_idx_;
-                hn.coordinates_ = loc.coordinates_;
-                ustr.house_numbers_.emplace_back(hn);
-              }
-
-              found = true;
-              break;
-            }
-          }
-          if (!found) {
-            street new_street;
-            new_street.name_idx_ = context.names_.size() - 1;
-            new_street.areas_ = loc.areas_;
-            house_number hn;
-            hn.hn_idx_ = loc.name_idx_;
-            hn.coordinates_ = loc.coordinates_;
-            new_street.house_numbers_.emplace_back(hn);
-            unique_streets.emplace_back(new_street);
-          }
-        }
-
-        context.streets_.insert(context.streets_.end(), unique_streets.begin(),
-                                unique_streets.end());
+      if (!house_numbers.empty()) {
+        street new_street;
+        new_street.name_idx_ = name_idx;
+        new_street.house_numbers_ = house_numbers;
+        new_street.areas_ = unique_place.first;
+        context.streets_.emplace_back(new_street);
       }
     }
   }
 }
 
+void split_box(box const& b, int32_t const max_dim, std::vector<box>& boxes,
+               multi_polygon const& polygon) {
+  auto const min_x = b.min_corner().get<0>();
+  auto const max_x = b.max_corner().get<0>();
+  auto const min_y = b.min_corner().get<1>();
+  auto const max_y = b.max_corner().get<1>();
+
+  auto const width = max_x - min_x;
+  auto const height = max_y - min_y;
+
+  if (width <= max_dim && height <= max_dim) {
+    if (bg::covered_by(b.min_corner(), polygon) ||
+        bg::covered_by(b.max_corner(), polygon)) {
+      boxes.emplace_back(b);
+    }
+    return;
+  }
+
+  if (width > max_dim) {
+    auto const half_x = min_x + (width >> 1);
+    box left_box(point(min_x, min_y), point(half_x, max_y));
+    split_box(left_box, max_dim, boxes, polygon);
+
+    box right_box(point(half_x + 1, min_y), point(max_x, max_y));
+    split_box(right_box, max_dim, boxes, polygon);
+  } else {
+    auto const half_y = min_y + (height >> 1);
+    box top_box(point(min_x, half_y + 1), point(max_x, max_y));
+    split_box(top_box, max_dim, boxes, polygon);
+
+    box bottom_box(point(min_x, min_y), point(max_x, half_y));
+    split_box(bottom_box, max_dim, boxes, polygon);
+  }
+}
+
+void update_progress(float& percentage, float const inc_val) {
+  auto percentage_int = static_cast<int>(percentage);
+  percentage += inc_val;
+  if (percentage_int != static_cast<int>(percentage)) {
+    percentage_int = std::min(static_cast<int>(percentage), 100);
+    printf("\r[%3d%%]", percentage_int);
+    std::fflush(stdout);
+  }
+}
+
 typeahead_context extract(std::string const& input_path,
-                          osmium::TagsFilter const& filter, bool exact) {
+                          osmium::TagsFilter const& filter,
+                          uint32_t const approximation_lvl) {
   osmium::io::File input_file(input_path);
 
   osmium::area::Assembler::config_type assembler_config;
@@ -375,7 +337,9 @@ typeahead_context extract(std::string const& input_path,
       assembler_config, mp_filter);
 
   // first pass : read relations
+  std::cout << "reading relations... " << std::flush;
   osmium::relations::read_relations(input_file, mp_manager);
+  std::cout << "done" << std::endl;
 
   index_type index;
   location_handler_type location_handler(index);
@@ -383,10 +347,11 @@ typeahead_context extract(std::string const& input_path,
 
   // second pass : read all objects & run them first through the node location
   // handler and then the multipolygon collector and the place extractor
-  typeahead_context context;
+  std::cout << "reading areas and locations... " << std::flush;
   osmium::io::Reader reader(
       input_file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way,
       osmium::io::read_meta::no);
+  typeahead_context context;
   auto geom_handler = geometry_handler(context.areas_);
   auto place_handler = place_extractor(filter);
   osmium::apply(
@@ -396,6 +361,7 @@ typeahead_context extract(std::string const& input_path,
       }),
       place_handler);
   reader.close();
+  std::cout << "done" << std::endl;
 
   auto const inv_population_sum =
       1.0 / static_cast<double>(geom_handler.population_sum_);
@@ -403,20 +369,61 @@ typeahead_context extract(std::string const& input_path,
     area.popularity_ = 1.0 + area.popularity_ * inv_population_sum;
   }
 
-  auto rtree = bgi::rtree<value, bgi::linear<16>>();
+  std::vector<value> values;
   for (index_t i = 0; i != geom_handler.polygons_.size(); ++i) {
-    auto const b = bg::return_envelope<box>(geom_handler.polygons_[i]);
-    rtree.insert(std::make_pair(b, i));
+    auto b = bg::return_envelope<box>(geom_handler.polygons_[i]);
+    assert(b.min_corner().get<0>() <= b.max_corner().get<0>());
+    assert(b.min_corner().get<1>() <= b.max_corner().get<1>());
+    values.emplace_back(b, i);
   }
 
+  std::vector<value> final_values;
+  if (approximation_lvl < APPROX_LVL_1 || approximation_lvl > APPROX_LVL_5) {
+    final_values.insert(final_values.end(), values.begin(), values.end());
+  } else {
+    std::cout << "calculating approximations for polygons... " << std::endl
+              << std::flush;
+    auto percentage = 0.0f;
+    auto const inc_val = (1.0f / values.size()) * 100.1f;
+    auto const max_dim = approximation_lvl;
+    for (index_t i = 0; i != values.size(); ++i) {
+      std::vector<box> split_boxes;
+      split_box(values[i].first, max_dim, split_boxes,
+                geom_handler.polygons_[i]);
+      for (auto const& b : split_boxes) {
+        final_values.emplace_back(b, i);
+      }
+      update_progress(percentage, inc_val);
+    }
+    std::cout << std::endl << "done" << std::endl;
+  }
+
+  auto rtree = bgi::rtree<value, bgi::linear<16>>();
+  rtree.insert(final_values.begin(), final_values.end());
+
+  std::cout << "generating streets... " << std::endl << std::flush;
+  auto percentage = 0.0f;
+  auto const inc_val = (1.0f / place_handler.streets_.size()) * 100.1f;
   for (auto& str_it : place_handler.streets_) {
     for (auto& loc : str_it.second) {
-      loc.areas_ =
-          get_area_ids(point(loc.coordinates_.lon_, loc.coordinates_.lat_),
-                       rtree, geom_handler.polygons_, exact);
+      auto const p = point(loc.coordinates_.lon_, loc.coordinates_.lat_);
+      if (approximation_lvl == APPROX_NONE) {
+        loc.areas_ = get_area_ids(p, rtree, geom_handler.polygons_);
+      } else {
+        auto query_list = std::vector<value>();
+        rtree.query(bgi::covers(p), std::back_inserter(query_list));
+        for (auto const& q : query_list) {
+          loc.areas_.emplace_back(q.second);
+        }
+      }
     }
+    update_progress(percentage, inc_val);
   }
-  compress_streets(context, place_handler);
+  std::cout << std::endl << "done" << std::endl;
+
+  std::cout << "removing duplicates... " << std::flush;
+  remove_duplicates(context, place_handler);
+  std::cout << "done" << std::endl;
 
   context.area_names_.resize(geom_handler.names_.size());
   for (auto const& area_name : geom_handler.names_) {

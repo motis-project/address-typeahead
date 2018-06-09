@@ -125,7 +125,7 @@ void extract(std::string const& input_path, std::ofstream& out) {
   filter.add_rule(false, "natural", "tree");
 
   address_typeahead::typeahead_context context =
-      address_typeahead::extract(input_path, filter, true);
+      address_typeahead::extract(input_path, filter, APPROX_NONE);
   ti.elapsed_time_s();
 
   {
