@@ -84,12 +84,14 @@ std::vector<index_t> typeahead::complete(
     return result;
   }
 
-  auto clean_strings = std::vector<std::string>();
   auto postcodes = std::vector<index_t>();
+  auto clean_strings = std::vector<std::string>();
   for (auto const& str : strings) {
     auto const val = atol(str.c_str());
     if (val == 0) {
-      clean_strings.emplace_back(str);
+      if (str.length() >= 3) {
+        clean_strings.emplace_back(str);
+      }
     } else {
       postcodes.emplace_back(val);
     }
@@ -112,6 +114,17 @@ std::vector<index_t> typeahead::complete(
     }
   }
 
+  auto max_str_len = size_t(0);
+  auto string_weights = std::vector<float>();
+  for (auto const& str : guess_strings) {
+      max_str_len = std::max(max_str_len, str.length());
+      string_weights.emplace_back(str.length());
+  }
+  auto const normalization_val = 1.0f / static_cast<float>(max_str_len);
+  for (size_t i = 0; i != string_weights.size(); ++i) {
+    string_weights[i] *= normalization_val;
+  }
+
   auto max_cos_sim_place = std::vector<float>(place_guess_to_index_.size());
   auto max_cos_sim_area = std::vector<float>(area_guess_to_index_.size());
   std::fill(max_cos_sim_place.begin(), max_cos_sim_place.end(), 0.0f);
@@ -130,7 +143,7 @@ std::vector<index_t> typeahead::complete(
           area_guesser_.guess_match(guess_strings[i], options.max_guesses_);
       for (auto const& ag : area_guesses) {
         max_cos_sim_area[ag.index] =
-            std::max(max_cos_sim_area[ag.index], ag.cos_sim);
+            std::max(max_cos_sim_area[ag.index], ag.cos_sim * string_weights[i]);
       }
     }
   } else {
@@ -139,14 +152,14 @@ std::vector<index_t> typeahead::complete(
           place_guesser_.guess_match(guess_strings[i], options.max_guesses_);
       for (auto const& pg : place_guesses) {
         max_cos_sim_place[pg.index] =
-            std::max(max_cos_sim_place[pg.index], pg.cos_sim);
+            std::max(max_cos_sim_place[pg.index], pg.cos_sim * string_weights[i]);
       }
 
       auto const& area_guesses =
           area_guesser_.guess_match(guess_strings[i], options.max_guesses_);
       for (auto const& ag : area_guesses) {
         max_cos_sim_area[ag.index] =
-            std::max(max_cos_sim_area[ag.index], ag.cos_sim);
+            std::max(max_cos_sim_area[ag.index], ag.cos_sim * string_weights[i]);
       }
     }
   }

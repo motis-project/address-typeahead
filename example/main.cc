@@ -111,21 +111,34 @@ void typeahead(std::string const& input_file) {
 void extract(std::string const& input_path, std::ofstream& out) {
   auto ti = address_typeahead::timer();
 
-  osmium::TagsFilter filter(true);
-  filter.add_rule(false, "traffic_sign");
-  filter.add_rule(false, "barrier");
-  filter.add_rule(false, "aeroway");
-  filter.add_rule(false, "waterway");
-  filter.add_rule(false, "train");
-  filter.add_rule(false, "tram");
-  filter.add_rule(false, "railway");
-  filter.add_rule(false, "amenity", "waste_disposal");
-  filter.add_rule(false, "amenity", "parking");
-  filter.add_rule(false, "landuse", "garages");
-  filter.add_rule(false, "natural", "tree");
+  address_typeahead::extract_options options;
+  options.whitelist_add("name");
+  options.whitelist_add("highway");
+  options.whitelist_add("addr:street");
+  options.whitelist_add("addr:housenumber");
+
+  options.blacklist_add("tram");
+  options.blacklist_add("power");
+  options.blacklist_add("train");
+  options.blacklist_add("aeroway");
+  options.blacklist_add("waterway");
+  options.blacklist_add("railway");
+  options.blacklist_add("barrier");
+  options.blacklist_add("service");
+  options.blacklist_add("traffic_sign");
+  options.blacklist_add("natural", "tree");
+  options.blacklist_add("building", "garage");
+  options.blacklist_add("amenity", "parking");
+  options.blacklist_add("landuse", "garages");
+  options.blacklist_add("landuse", "farmland");
+  options.blacklist_add("highway", "service");
+  options.blacklist_add("highway", "bus_stop");
+  options.blacklist_add("amenity", "waste_disposal");
+
+  options.approximation_lvl_ = address_typeahead::APPROX_NONE;
 
   address_typeahead::typeahead_context context =
-      address_typeahead::extract(input_path, filter, APPROX_NONE);
+      address_typeahead::extract(input_path, options);
   ti.elapsed_time_s();
 
   {

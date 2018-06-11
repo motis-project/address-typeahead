@@ -57,8 +57,8 @@ TEST(Test, test_loading) {
     ia(context);
   }
 
-  EXPECT_EQ(1729, context.streets_.size());
-  EXPECT_EQ(18376, context.places_.size());
+  EXPECT_EQ(1728, context.streets_.size());
+  EXPECT_EQ(17937, context.places_.size());
 
   auto t = typeahead(context);
   auto string_vec = std::vector<std::string>();
@@ -77,10 +77,11 @@ TEST(Test, test_loading) {
 TEST(Test, test_house_numbers) {
   auto string_vec = std::vector<std::string>();
   string_vec.emplace_back("gartenstr");
-  string_vec.emplace_back("nord");
+  string_vec.emplace_back("27568");
   auto const& result = test_env->typeahead_.complete(string_vec);
 
   auto const house_numbers = test_env->context_.get_house_numbers(result.at(0));
+  ASSERT_TRUE(!house_numbers.empty());
   EXPECT_EQ("13", house_numbers[0]);
 
   double lat, lon;

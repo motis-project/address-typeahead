@@ -114,8 +114,9 @@ public:
 
 class place_extractor : public osmium::handler::Handler {
 public:
-  explicit place_extractor(osmium::TagsFilter const& filter)
-      : filter_(filter), hn_index_(0) {
+  explicit place_extractor(osmium::TagsFilter const& whitelist,
+                           osmium::TagsFilter const& blacklist)
+      : whitelist_(whitelist), blacklist_(blacklist), hn_index_(0) {
     house_numbers_.emplace("", hn_index_++);
   }
 
@@ -124,8 +125,19 @@ public:
       return;
     }
 
+    auto found_in_whitelist = false;
     for (auto const& tag : w.tags()) {
-      if (!filter_(tag)) {
+      if (whitelist_(tag)) {
+        found_in_whitelist = true;
+        break;
+      }
+    }
+    if (!found_in_whitelist) {
+      return;
+    }
+
+    for (auto const& tag : w.tags()) {
+      if (blacklist_(tag)) {
         return;
       }
     }
@@ -149,8 +161,19 @@ public:
   }
 
   void node(osmium::Node const& n) {
+    auto found_in_whitelist = false;
     for (auto const& tag : n.tags()) {
-      if (!filter_(tag)) {
+      if (whitelist_(tag)) {
+        found_in_whitelist = true;
+        break;
+      }
+    }
+    if (!found_in_whitelist) {
+      return;
+    }
+
+    for (auto const& tag : n.tags()) {
+      if (blacklist_(tag)) {
         return;
       }
     }
@@ -198,7 +221,8 @@ public:
     }
   }
 
-  osmium::TagsFilter const& filter_;
+  osmium::TagsFilter const& whitelist_;
+  osmium::TagsFilter const& blacklist_;
   std::unordered_map<std::string, std::vector<location>> streets_;
   std::unordered_map<std::string, index_t> house_numbers_;
   index_t hn_index_;
@@ -284,24 +308,26 @@ void split_box(box const& b, int32_t const max_dim, std::vector<box>& boxes,
 
   auto const width = max_x - min_x;
   auto const height = max_y - min_y;
+  auto const half_width = width >> 1;
+  auto const half_height = height >> 1;
 
   if (width <= max_dim && height <= max_dim) {
-    if (bg::covered_by(b.min_corner(), polygon) ||
-        bg::covered_by(b.max_corner(), polygon)) {
+    if (bg::covered_by(point(min_x + half_width, min_y + half_height),
+                       polygon)) {
       boxes.emplace_back(b);
     }
     return;
   }
 
   if (width > max_dim) {
-    auto const half_x = min_x + (width >> 1);
+    auto const half_x = min_x + half_width;
     box left_box(point(min_x, min_y), point(half_x, max_y));
     split_box(left_box, max_dim, boxes, polygon);
 
     box right_box(point(half_x + 1, min_y), point(max_x, max_y));
     split_box(right_box, max_dim, boxes, polygon);
   } else {
-    auto const half_y = min_y + (height >> 1);
+    auto const half_y = min_y + half_height;
     box top_box(point(min_x, half_y + 1), point(max_x, max_y));
     split_box(top_box, max_dim, boxes, polygon);
 
@@ -320,9 +346,26 @@ void update_progress(float& percentage, float const inc_val) {
   }
 }
 
+void extract_options::whitelist_add(std::string const& tag,
+                                    std::string const& value) {
+  if (value == "") {
+    whitelist_.add_rule(true, tag);
+  } else {
+    whitelist_.add_rule(true, tag, value);
+  }
+}
+
+void extract_options::blacklist_add(std::string const& tag,
+                                    std::string const& value) {
+  if (value == "") {
+    blacklist_.add_rule(true, tag);
+  } else {
+    blacklist_.add_rule(true, tag, value);
+  }
+}
+
 typeahead_context extract(std::string const& input_path,
-                          osmium::TagsFilter const& filter,
-                          uint32_t const approximation_lvl) {
+                          extract_options const& options) {
   osmium::io::File input_file(input_path);
 
   osmium::area::Assembler::config_type assembler_config;
@@ -353,7 +396,7 @@ typeahead_context extract(std::string const& input_path,
       osmium::io::read_meta::no);
   typeahead_context context;
   auto geom_handler = geometry_handler(context.areas_);
-  auto place_handler = place_extractor(filter);
+  auto place_handler = place_extractor(options.whitelist_, options.blacklist_);
   osmium::apply(
       reader, location_handler,
       mp_manager.handler([&geom_handler](osmium::memory::Buffer&& buffer) {
@@ -378,14 +421,15 @@ typeahead_context extract(std::string const& input_path,
   }
 
   std::vector<value> final_values;
-  if (approximation_lvl < APPROX_LVL_1 || approximation_lvl > APPROX_LVL_5) {
+  if (options.approximation_lvl_ < APPROX_LVL_1 ||
+      options.approximation_lvl_ > APPROX_LVL_5) {
     final_values.insert(final_values.end(), values.begin(), values.end());
   } else {
     std::cout << "calculating approximations for polygons... " << std::endl
               << std::flush;
     auto percentage = 0.0f;
     auto const inc_val = (1.0f / values.size()) * 100.1f;
-    auto const max_dim = approximation_lvl;
+    auto const max_dim = options.approximation_lvl_;
     for (index_t i = 0; i != values.size(); ++i) {
       std::vector<box> split_boxes;
       split_box(values[i].first, max_dim, split_boxes,
@@ -407,7 +451,7 @@ typeahead_context extract(std::string const& input_path,
   for (auto& str_it : place_handler.streets_) {
     for (auto& loc : str_it.second) {
       auto const p = point(loc.coordinates_.lon_, loc.coordinates_.lat_);
-      if (approximation_lvl == APPROX_NONE) {
+      if (options.approximation_lvl_ == APPROX_NONE) {
         loc.areas_ = get_area_ids(p, rtree, geom_handler.polygons_);
       } else {
         auto query_list = std::vector<value>();
