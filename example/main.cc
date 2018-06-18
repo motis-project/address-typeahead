@@ -1,6 +1,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <regex>
 #include <sstream>
 
 #include <cereal/archives/binary.hpp>
@@ -22,10 +23,16 @@ std::string get_place_string(
   }
   result += " }";
 
-  auto const house_numbers = context.get_house_numbers(id);
+  auto house_numbers = context.get_house_numbers(id);
+  std::sort(house_numbers.begin(), house_numbers.end());
   if (!house_numbers.empty()) {
     result += " { ";
-    for (auto const& hn : house_numbers) {
+    for (size_t i = 0; i != house_numbers.size(); ++i) {
+      auto const& hn = house_numbers[i];
+      if (!std::regex_match(hn, std::regex("\\d{1,4}[:alpha:]*")) ||
+          (i + 1 != house_numbers.size() && house_numbers[i + 1] == hn)) {
+        continue;
+      }
       result += hn + ", ";
     }
     result += " }";
@@ -49,8 +56,7 @@ std::vector<address_typeahead::index_t> parse_string_and_complete(
   auto house_number = std::string("");
   auto str_it = std::begin(sub_strings);
   while (str_it != std::end(sub_strings)) {
-    auto const num = std::atol(str_it->c_str());
-    if (*str_it == "." || (num && num <= 9999)) {
+    if (std::regex_match(*str_it, std::regex("\\.|\\d{1,4}[:alpha:]*"))) {
       house_number = *str_it;
       str_it = sub_strings.erase(str_it);
     } else {
