@@ -73,14 +73,15 @@ std::vector<index_t> typeahead::complete(
   if (strings.empty()) {
     return std::vector<index_t>();
   } else if (strings.size() == 1) {
-    auto guesses = place_guesser_.guess(strings[0], options.max_results_);
+    auto guesses = place_guesser_.guess_match(strings[0], options.max_results_);
     auto result = std::vector<index_t>();
     for (auto const& g : guesses) {
-      for (auto const& p_idx : place_guess_to_index_[g]) {
-        result.emplace_back(p_idx);
+      if (g.cos_sim >= options.min_sim_) {
+        for (auto const& p_idx : place_guess_to_index_[g.index]) {
+          result.emplace_back(p_idx);
+        }
       }
     }
-    result.resize(options.max_results_);
     return result;
   }
 
@@ -207,9 +208,10 @@ std::vector<index_t> typeahead::complete(
 
   auto result = std::vector<index_t>();
   for (size_t i = 0; i != options.max_results_; ++i) {
-    result.emplace_back(acc_[i].first);
+    if (acc_[i].second >= options.min_sim_) {
+      result.emplace_back(acc_[i].first);
+    }
   }
-
   return result;
 }
 

@@ -17,6 +17,8 @@ struct complete_options {
   // < 1 favors areas; > 1 favors places
   float place_bias_ = 1.5f;
 
+  float min_sim_ = 0.01f;
+
   unsigned max_guesses_ = 100;
   unsigned max_results_ = 10;
 
