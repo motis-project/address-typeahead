@@ -62,7 +62,9 @@ std::vector<address_typeahead::index_t> parse_string_and_complete(
     return std::vector<address_typeahead::index_t>();
   }
 
-  auto const candidates = t.complete(sub_strings, 10);
+  address_typeahead::complete_options options;
+  options.max_results_ = 10;
+  auto const candidates = t.complete(sub_strings, options);
 
   if (house_number != "") {
     double lon, lat;

@@ -89,17 +89,18 @@ std::vector<index_t> typeahead::complete(
   for (auto const& str : strings) {
     auto const val = atol(str.c_str());
     if (val == 0) {
-      if (str.length() >= 3) {
-        clean_strings.emplace_back(str);
-      }
+      clean_strings.emplace_back(str);
     } else {
       postcodes.emplace_back(val);
     }
   }
 
   auto guess_strings = std::vector<std::string>();
-  guess_strings.insert(guess_strings.begin(), clean_strings.begin(),
-                       clean_strings.end());
+  for (auto const& str : clean_strings) {
+    if (str.length() >= 3) {
+      guess_strings.emplace_back(str);
+    }
+  }
   if (options.string_chain_len_ > 1) {
     auto const start_i = options.first_string_is_place_ ? 1 : 0;
     for (size_t i = start_i; i != clean_strings.size() - 1; ++i) {
@@ -110,15 +111,17 @@ std::vector<index_t> typeahead::complete(
       for (size_t j = 1; j != chain_len; ++j) {
         str = str + " " + clean_strings[i + j];
       }
-      guess_strings.emplace_back(str);
+      if (str.length() >= 3) {
+        guess_strings.emplace_back(str);
+      }
     }
   }
 
   auto max_str_len = size_t(0);
   auto string_weights = std::vector<float>();
   for (auto const& str : guess_strings) {
-      max_str_len = std::max(max_str_len, str.length());
-      string_weights.emplace_back(str.length());
+    max_str_len = std::max(max_str_len, str.length());
+    string_weights.emplace_back(str.length());
   }
   auto const normalization_val = 1.0f / static_cast<float>(max_str_len);
   for (size_t i = 0; i != string_weights.size(); ++i) {
@@ -142,8 +145,8 @@ std::vector<index_t> typeahead::complete(
       auto const& area_guesses =
           area_guesser_.guess_match(guess_strings[i], options.max_guesses_);
       for (auto const& ag : area_guesses) {
-        max_cos_sim_area[ag.index] =
-            std::max(max_cos_sim_area[ag.index], ag.cos_sim * string_weights[i]);
+        max_cos_sim_area[ag.index] = std::max(max_cos_sim_area[ag.index],
+                                              ag.cos_sim * string_weights[i]);
       }
     }
   } else {
@@ -151,15 +154,15 @@ std::vector<index_t> typeahead::complete(
       auto const& place_guesses =
           place_guesser_.guess_match(guess_strings[i], options.max_guesses_);
       for (auto const& pg : place_guesses) {
-        max_cos_sim_place[pg.index] =
-            std::max(max_cos_sim_place[pg.index], pg.cos_sim * string_weights[i]);
+        max_cos_sim_place[pg.index] = std::max(max_cos_sim_place[pg.index],
+                                               pg.cos_sim * string_weights[i]);
       }
 
       auto const& area_guesses =
           area_guesser_.guess_match(guess_strings[i], options.max_guesses_);
       for (auto const& ag : area_guesses) {
-        max_cos_sim_area[ag.index] =
-            std::max(max_cos_sim_area[ag.index], ag.cos_sim * string_weights[i]);
+        max_cos_sim_area[ag.index] = std::max(max_cos_sim_area[ag.index],
+                                              ag.cos_sim * string_weights[i]);
       }
     }
   }
