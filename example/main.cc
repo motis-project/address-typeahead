@@ -70,6 +70,7 @@ std::vector<address_typeahead::index_t> parse_string_and_complete(
 
   address_typeahead::complete_options options;
   options.max_results_ = 10;
+  options.string_chain_len_ = 1;
   auto const candidates = t.complete(sub_strings, options);
 
   if (house_number != "") {
