@@ -15,7 +15,7 @@ struct complete_options {
 
   // controls the influence places have on the result
   // < 1 favors areas; > 1 favors places
-  float place_bias_ = 1.5f;
+  float place_bias_ = 1.2f;
 
   float min_sim_ = 0.01f;
 

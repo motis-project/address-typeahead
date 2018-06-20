@@ -117,7 +117,9 @@ std::vector<index_t> typeahead::complete(
         }
       }
     }
-    result.resize(options.max_results_);
+    if (result.size() > options.max_results_) {
+      result.resize(options.max_results_);
+    }
     return result;
   } else if (guess_strings.size() == 1 && postcodes.empty()) {
     auto guesses =
@@ -130,7 +132,9 @@ std::vector<index_t> typeahead::complete(
         }
       }
     }
-    result.resize(options.max_results_);
+    if (result.size() > options.max_results_) {
+      result.resize(options.max_results_);
+    }
     return result;
   }
 
@@ -223,7 +227,8 @@ std::vector<index_t> typeahead::complete(
   auto const i_max =
       std::min(static_cast<size_t>(options.max_guesses_), acc_.size());
   for (size_t i = 0; i != i_max; ++i) {
-    place_strings.emplace_back(context_.get_name(acc_[i].first), 1.0);
+    place_strings.emplace_back(context_.get_name(acc_[i].first),
+                               options.place_bias_);
     index_translation_table.emplace_back(i);
 
     auto num_of_postcode_matches = 0;
