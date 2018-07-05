@@ -70,7 +70,7 @@ std::vector<address_typeahead::index_t> parse_string_and_complete(
 
   address_typeahead::complete_options options;
   options.max_results_ = 10;
-  options.string_chain_len_ = 1;
+  options.string_chain_len_ = 2;
   auto const candidates = t.complete(sub_strings, options);
 
   if (house_number != "") {
@@ -144,7 +144,15 @@ void extract(std::string const& input_path, std::ofstream& out) {
   options.blacklist_add("highway", "bus_stop");
   options.blacklist_add("amenity", "waste_disposal");
 
-  options.approximation_lvl_ = address_typeahead::APPROX_NONE;
+  char approx;
+  std::cout << "approximate areas? (y/n) : ";
+  std::cin >> approx;
+
+  if (approx == 'y') {
+    options.approximation_lvl_ = address_typeahead::APPROX_LVL_3;
+  } else {
+    options.approximation_lvl_ = address_typeahead::APPROX_NONE;
+  }
 
   address_typeahead::typeahead_context context =
       address_typeahead::extract(input_path, options);
