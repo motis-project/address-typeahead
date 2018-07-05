@@ -71,7 +71,7 @@ TEST(Test, test_loading) {
 
   string_vec.emplace_back("27568");
   candidates = t.complete(string_vec);
-  EXPECT_EQ("Festma", context.get_name(candidates.at(1)));
+  EXPECT_EQ("Festma", context.get_name(candidates.at(0)));
 }
 
 TEST(Test, test_house_numbers) {

@@ -16,9 +16,16 @@ namespace guess {
 unsigned trigram_match_count(std::vector<uint16_t> const& in_trigrams,
                              std::vector<uint16_t> const& trigrams,
                              std::pair<size_t, size_t> range) {
+  if (range.first == range.second || in_trigrams.empty()) {
+    return 0;
+  }
   auto matches = 0u;
-  for (auto const in_trigram : in_trigrams) {
-    for (size_t i = range.first; i != range.second; ++i) {
+  if (in_trigrams[0] == trigrams[range.first]) {
+    matches += 2;
+  }
+  for (size_t i = 1; i != in_trigrams.size(); ++i) {
+    auto const in_trigram = in_trigrams[i];
+    for (size_t i = range.first + 1; i != range.second; ++i) {
       auto const candidate_trigram = trigrams[i];
       if (in_trigram == candidate_trigram) {
         ++matches;
@@ -104,6 +111,11 @@ std::vector<guesser::match> guesser::guess_match(std::string in,
             trigram_match_count(in_trigrams, trigrams_, trigram_indices_[i]);
         m.emplace_back(i, candidates_[i].second * match_count /
                               (sqrt_len_vec_in * match_sqrts_[i]));
+        auto const len_cmp =
+            static_cast<float>(candidates_[i].first.length()) / in.length();
+        if (len_cmp <= 1.0f) {
+          m[m.size() - 1].cos_sim *= len_cmp * 0.9f;
+        }
 
         // Score exact word match.
         if (m.back().cos_sim > 0.5) {
