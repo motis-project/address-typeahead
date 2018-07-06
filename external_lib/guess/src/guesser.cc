@@ -113,7 +113,7 @@ std::vector<guesser::match> guesser::guess_match(std::string in,
                               (sqrt_len_vec_in * match_sqrts_[i]));
         auto const len_cmp =
             static_cast<float>(candidates_[i].first.length()) / in.length();
-        if (len_cmp <= 1.0f) {
+        if (len_cmp < 1.0f) {
           m[m.size() - 1].cos_sim *= len_cmp * 0.9f;
         }
 
