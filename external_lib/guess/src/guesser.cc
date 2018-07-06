@@ -19,13 +19,10 @@ unsigned trigram_match_count(std::vector<uint16_t> const& in_trigrams,
   if (range.first == range.second || in_trigrams.empty()) {
     return 0;
   }
-  auto matches = 0u;
-  if (in_trigrams[0] == trigrams[range.first]) {
-    matches += 2;
-  }
-  for (size_t i = 1; i != in_trigrams.size(); ++i) {
+  auto matches = (in_trigrams[0] == trigrams[range.first])? 1u : 0u;
+  for (size_t i = 0; i != in_trigrams.size(); ++i) {
     auto const in_trigram = in_trigrams[i];
-    for (size_t i = range.first + 1; i != range.second; ++i) {
+    for (size_t i = range.first; i != range.second; ++i) {
       auto const candidate_trigram = trigrams[i];
       if (in_trigram == candidate_trigram) {
         ++matches;
@@ -114,7 +111,7 @@ std::vector<guesser::match> guesser::guess_match(std::string in,
         auto const len_cmp =
             static_cast<float>(candidates_[i].first.length()) / in.length();
         if (len_cmp < 1.0f) {
-          m[m.size() - 1].cos_sim *= len_cmp * 0.9f;
+          m[m.size() - 1].cos_sim *= len_cmp;
         }
 
         // Score exact word match.
