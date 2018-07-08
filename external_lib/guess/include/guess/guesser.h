@@ -23,9 +23,6 @@ struct guesser {
   std::vector<float> match_sqrts_;
   std::vector<std::vector<unsigned>> index_;
   std::vector<std::pair<std::string, float>> candidates_;
-
-  std::vector<std::pair<size_t, size_t>> trigram_indices_;
-  std::vector<uint16_t> trigrams_;
 };
 
 }  // namespace guess
