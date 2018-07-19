@@ -146,7 +146,7 @@ std::vector<index_t> typeahead::complete(
   }
   auto const normalization_val = 1.0f / static_cast<float>(max_str_len);
   for (size_t i = 0; i != string_weights.size(); ++i) {
-    string_weights[i] *= normalization_val;
+    string_weights[i] = std::max(0.6f, string_weights[i] * normalization_val);
   }
 
   auto max_cos_sim_place = std::vector<float>(place_guess_to_index_.size());
