@@ -65,7 +65,7 @@ set_target_properties(at-test PROPERTIES COMPILE_FLAGS ${compiler-flags})
 ################################
 # clang-format check
 ################################
-add_custom_target(format-check
+add_custom_target(address-typeahead-format-check
   find src include test -type f -name "*.cc" -o -name "*.h" -print0 | xargs -0 clang-format -i
   COMMAND
   git status --porcelain | xargs -I {} -0 test -z \"{}\"
@@ -78,7 +78,7 @@ add_custom_target(format-check
 ################################
 # Lint
 ################################
-add_custom_target(lint
+add_custom_target(address-typeahead-lint
   /usr/bin/python
 	${CMAKE_CURRENT_SOURCE_DIR}/tools/run-clang-tidy.py
 	  -exit-on-error
@@ -89,4 +89,4 @@ add_custom_target(lint
   COMMENT "Running clang-tidy"
   VERBATIM
 )
-add_dependencies(lint address-typeahead at-test at-example)
+add_dependencies(address-typeahead-lint address-typeahead at-test at-example)
