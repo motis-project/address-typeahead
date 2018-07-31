@@ -76,9 +76,9 @@ index_t typeahead_context::get_name_id(index_t id) const {
   return 0;
 }
 
-std::vector<std::string> typeahead_context::get_area_names(
+std::vector<std::pair<std::string, uint32_t>> typeahead_context::get_area_names(
     index_t id, uint32_t const levels) const {
-  auto result = std::vector<std::string>();
+  auto result = std::vector<std::pair<std::string, uint32_t>>();
   if (is_place(id) || is_street(id)) {
     auto const& area_ids = get_area_ids(id, levels);
     auto areas = std::vector<area>();
@@ -94,9 +94,9 @@ std::vector<std::string> typeahead_context::get_area_names(
         continue;
       }
       if (area_i.level_ != POSTCODE) {
-        result.emplace_back(area_names_[area_i.name_idx_]);
+        result.emplace_back(area_names_[area_i.name_idx_], area_i.level_);
       } else {
-        result.emplace_back(std::to_string(area_i.name_idx_));
+        result.emplace_back(std::to_string(area_i.name_idx_), area_i.level_);
       }
     }
   }
