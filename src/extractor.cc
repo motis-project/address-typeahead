@@ -3,24 +3,36 @@
 #include <unordered_map>
 #include <vector>
 
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/box.hpp>
-#include <boost/geometry/geometries/multi_polygon.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
+#include "boost/geometry.hpp"
+#include "boost/geometry/geometries/box.hpp"
+#include "boost/geometry/geometries/multi_polygon.hpp"
+#include "boost/geometry/geometries/point.hpp"
+#include "boost/geometry/geometries/polygon.hpp"
+#include "boost/geometry/geometries/ring.hpp"
 
-#include <osmium/area/assembler.hpp>
-#include <osmium/area/multipolygon_manager.hpp>
-#include <osmium/dynamic_handler.hpp>
-#include <osmium/handler.hpp>
-#include <osmium/handler/node_locations_for_ways.hpp>
-#include <osmium/index/map/flex_mem.hpp>
-#include <osmium/io/pbf_input.hpp>
-#include <osmium/io/xml_input.hpp>
-#include <osmium/memory/buffer.hpp>
-#include <osmium/osm.hpp>
-#include <osmium/visitor.hpp>
+#include "osmium/area/assembler.hpp"
+#include "osmium/area/multipolygon_manager.hpp"
+#include "osmium/dynamic_handler.hpp"
+#include "osmium/handler.hpp"
+#include "osmium/handler/node_locations_for_ways.hpp"
+#include "osmium/index/map/flex_mem.hpp"
+#include "osmium/io/pbf_input.hpp"
+#include "osmium/io/xml_input.hpp"
+#include "osmium/memory/buffer.hpp"
+#include "osmium/osm.hpp"
+#include "osmium/visitor.hpp"
 
 #include "address-typeahead/common.h"
+
+namespace bg = boost::geometry;
+namespace bgi = boost::geometry::index;
+
+using point = bg::model::point<int32_t, 2, bg::cs::cartesian>;
+using box = bg::model::box<point>;
+using ring = bg::model::ring<point, false, true>;
+using polygon = bg::model::polygon<point, false, true>;
+using multi_polygon = bg::model::multi_polygon<polygon>;
+using value = std::pair<box, address_typeahead::index_t>;
 
 using index_type = osmium::index::map::FlexMem<osmium::unsigned_object_id_type,
                                                osmium::Location>;

@@ -4,42 +4,32 @@
 #include <string>
 #include <vector>
 
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/box.hpp>
-#include <boost/geometry/geometries/multi_polygon.hpp>
-#include <boost/geometry/geometries/point.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-#include <boost/geometry/geometries/ring.hpp>
+#include "boost/geometry.hpp"
+#include "boost/geometry/geometries/box.hpp"
+#include "boost/geometry/geometries/multi_polygon.hpp"
+#include "boost/geometry/geometries/point.hpp"
+#include "boost/geometry/geometries/polygon.hpp"
+#include "boost/geometry/geometries/ring.hpp"
 
 namespace address_typeahead {
 
-namespace bg = boost::geometry;
-namespace bgi = boost::geometry::index;
+using index_t = uint32_t;
 
-typedef uint32_t index_t;
-
-typedef bg::model::point<int32_t, 2, bg::cs::cartesian> point;
-typedef bg::model::box<point> box;
-typedef bg::model::ring<point, false, true> ring;
-typedef bg::model::polygon<point, false, true> polygon;
-typedef bg::model::multi_polygon<polygon> multi_polygon;
-typedef std::pair<box, index_t> value;
-
-uint32_t const ADMIN_LEVEL_0(1);
-uint32_t const ADMIN_LEVEL_1(1 << 1);
-uint32_t const ADMIN_LEVEL_2(1 << 2);
-uint32_t const ADMIN_LEVEL_3(1 << 3);
-uint32_t const ADMIN_LEVEL_4(1 << 4);
-uint32_t const ADMIN_LEVEL_5(1 << 5);
-uint32_t const ADMIN_LEVEL_6(1 << 6);
-uint32_t const ADMIN_LEVEL_7(1 << 7);
-uint32_t const ADMIN_LEVEL_8(1 << 8);
-uint32_t const ADMIN_LEVEL_9(1 << 9);
-uint32_t const DMIN_LEVEL_10(1 << 10);
-uint32_t const ADMIN_LEVEL_11(1 << 11);
-uint32_t const ADMIN_LEVEL_12(1 << 12);
-uint32_t const ADMIN_LEVEL_MAX(ADMIN_LEVEL_12);
-uint32_t const POSTCODE(1 << 13);
+uint32_t constexpr const ADMIN_LEVEL_0(1);
+uint32_t constexpr const ADMIN_LEVEL_1(1 << 1);
+uint32_t constexpr const ADMIN_LEVEL_2(1 << 2);
+uint32_t constexpr const ADMIN_LEVEL_3(1 << 3);
+uint32_t constexpr const ADMIN_LEVEL_4(1 << 4);
+uint32_t constexpr const ADMIN_LEVEL_5(1 << 5);
+uint32_t constexpr const ADMIN_LEVEL_6(1 << 6);
+uint32_t constexpr const ADMIN_LEVEL_7(1 << 7);
+uint32_t constexpr const ADMIN_LEVEL_8(1 << 8);
+uint32_t constexpr const ADMIN_LEVEL_9(1 << 9);
+uint32_t constexpr const DMIN_LEVEL_10(1 << 10);
+uint32_t constexpr const ADMIN_LEVEL_11(1 << 11);
+uint32_t constexpr const ADMIN_LEVEL_12(1 << 12);
+uint32_t constexpr const ADMIN_LEVEL_MAX(ADMIN_LEVEL_12);
+uint32_t constexpr const POSTCODE(1 << 13);
 
 struct coordinates {
   int32_t lon_;
