@@ -51,9 +51,7 @@ target_include_directories(address-typeahead PRIVATE
   SYSTEM external_lib/zlib
   SYSTEM external_lib/protozero/include
   SYSTEM ${CMAKE_CURRENT_BINARY_DIR}/external_lib/zlib)
-target_include_directories(address-typeahead PUBLIC
-  SYSTEM external_lib/cereal/include
-  SYSTEM external_lib/guess/include)
+target_include_directories(address-typeahead PUBLIC SYSTEM external_lib/cereal/include)
 target_include_directories(address-typeahead PUBLIC include)
 
 
