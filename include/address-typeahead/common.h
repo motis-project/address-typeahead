@@ -86,7 +86,7 @@ struct typeahead_context {
   std::string get_name(index_t id) const;
   index_t get_name_id(index_t id) const;
 
-  std::vector<std::string> get_area_names(
+  std::vector<std::pair<std::string, uint32_t>> get_area_names(
       index_t id, uint32_t const levels = 0xffffffff) const;
   std::vector<std::string> get_house_numbers(index_t id) const;
 
