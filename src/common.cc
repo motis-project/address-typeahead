@@ -86,7 +86,8 @@ std::vector<std::pair<std::string, uint32_t>> typeahead_context::get_area_names(
       areas.emplace_back(areas_[area_id]);
     }
 
-    std::sort(areas.begin(), areas.end());
+    std::sort(areas.begin(), areas.end(),
+              [](area const& a, area const& b) { return a.level_ > b.level_; });
 
     for (size_t i = 0; i != areas.size(); ++i) {
       auto const& area_i = areas[i];
