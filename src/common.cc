@@ -93,10 +93,11 @@ std::vector<std::pair<std::string, uint32_t>> typeahead_context::get_area_names(
       if (i + 1 != areas.size() && areas[i + 1].name_idx_ == area_i.name_idx_) {
         continue;
       }
+      auto const admin_level = static_cast<uint32_t>(std::log2(area_i.level_));
       if (area_i.level_ != POSTCODE) {
-        result.emplace_back(area_names_[area_i.name_idx_], area_i.level_);
+        result.emplace_back(area_names_[area_i.name_idx_], admin_level);
       } else {
-        result.emplace_back(std::to_string(area_i.name_idx_), area_i.level_);
+        result.emplace_back(std::to_string(area_i.name_idx_), admin_level);
       }
     }
   }
