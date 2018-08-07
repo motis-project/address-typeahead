@@ -93,7 +93,7 @@ std::vector<index_t> typeahead::complete(
   }
   if (options.string_chain_len_ > 1) {
     auto const start_i = options.first_string_is_place_ ? 1 : 0;
-    for (size_t i = start_i; i != clean_strings.size() - 1; ++i) {
+    for (size_t i = start_i; i + 1 < clean_strings.size(); ++i) {
       auto const chain_len =
           std::min(options.string_chain_len_,
                    static_cast<unsigned>(clean_strings.size() - i));
