@@ -78,7 +78,7 @@ target_include_directories(at-test PRIVATE SYSTEM external_lib/googletest/google
 # clang-format check
 ################################
 add_custom_target(address-typeahead-format-check
-  find src include test -type f -name "*.cc" -o -name "*.h" -print0 | xargs -0 clang-format -i
+  find src include test example -type f -name "*.cc" -o -name "*.h" -print0 | xargs -0 clang-format -i
   COMMAND
   git status --porcelain | xargs -I {} -0 test -z \"{}\"
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -94,6 +94,8 @@ add_custom_target(address-typeahead-lint
   /usr/bin/python
 	${CMAKE_CURRENT_SOURCE_DIR}/tools/run-clang-tidy.py
 	  -exit-on-error
+      -quiet
+      -clang-tidy-binary clang-tidy-6.0
 	  -header-filter "^${CMAKE_CURRENT_SOURCE_DIR}(include/)"
 	  "^${CMAKE_CURRENT_SOURCE_DIR}/include/"
 	  "^${CMAKE_CURRENT_SOURCE_DIR}/src/"

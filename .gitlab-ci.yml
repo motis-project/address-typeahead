@@ -103,7 +103,7 @@ clang-tidy:
     - mkdir build-clang-tidy
     - cd build-clang-tidy
     - cmake -GNinja -DMOTIS_LINT=true ..
-    - ninja -j8 lint
+    - ninja -j8 address-typeahead-lint
 
 # Clang-Format
 clang-format:
@@ -115,5 +115,5 @@ clang-format:
     - mkdir build-clang-format
     - cd build-clang-format
     - cmake -GNinja ..
-    - ninja format-check
+    - ninja address-typeahead-format-check
 
