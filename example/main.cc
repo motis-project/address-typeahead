@@ -19,7 +19,7 @@ std::string get_place_string(
   result += context.get_name(id) + " { ";
   auto const areas = context.get_area_names(id);
   for (auto const& a : areas) {
-    result += a + ", ";
+    result += a.first + ", ";
   }
   result += " }";
 

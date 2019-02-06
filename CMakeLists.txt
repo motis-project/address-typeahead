@@ -45,7 +45,7 @@ if (MSVC)
 endif()
 target_link_libraries(address-typeahead guess zlibstatic expat ${CMAKE_THREAD_LIBS_INIT})
 set_target_properties(address-typeahead PROPERTIES COMPILE_FLAGS ${compiler-flags})
-target_include_directories(address-typeahead PRIVATE
+target_include_directories(address-typeahead PUBLIC
   SYSTEM external_lib/expat/include
   SYSTEM external_lib/osmium/include
   SYSTEM external_lib/zlib

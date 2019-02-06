@@ -45,8 +45,8 @@ TEST(Test, test_get_area_names) {
   string_vec.emplace_back("test");
   auto const& candidates = test_env->typeahead_.complete(string_vec);
   auto const areas = test_env->context_.get_area_names(candidates.at(5));
-  EXPECT_EQ(5, areas.size());
-  EXPECT_EQ("Bremen", areas.at(0));
+  EXPECT_EQ(5ul, areas.size());
+  EXPECT_EQ("Bremen", areas.back().first);
 }
 
 TEST(Test, test_loading) {
@@ -57,8 +57,8 @@ TEST(Test, test_loading) {
     ia(context);
   }
 
-  EXPECT_EQ(1728, context.streets_.size());
-  EXPECT_EQ(17937, context.places_.size());
+  EXPECT_EQ(1728ul, context.streets_.size());
+  EXPECT_EQ(17937ul, context.places_.size());
 
   auto t = typeahead(context);
   auto string_vec = std::vector<std::string>();
@@ -66,8 +66,8 @@ TEST(Test, test_loading) {
   auto candidates = t.complete(string_vec);
   auto area_names = context.get_area_names(candidates.at(0));
   EXPECT_EQ("Testcenter", context.get_name(candidates.at(0)));
-  EXPECT_EQ(5, area_names.size());
-  EXPECT_EQ("Bremen", area_names.at(0));
+  EXPECT_EQ(5ul, area_names.size());
+  EXPECT_EQ("Bremen", area_names.back().first);
 
   string_vec.emplace_back("27568");
   candidates = t.complete(string_vec);
