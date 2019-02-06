@@ -1,74 +1,119 @@
 variables:
-  ASAN_SYMBOLIZER_PATH: "/usr/bin/llvm-symbolizer"
+  ASAN_SYMBOLIZER_PATH: "/opt/clang+llvm-5.0.0-linux-x86_64-ubuntu16.04/bin/llvm-symbolizer"
 
-# GCC 5 production
-gcc-5-release:
+# GCC production
+gcc-release:
+  tags:
+    - bionic
   script:
-    - export BOOST_ROOT=/opt/boost_1_60_0-gcc-5
+    - export BOOST_ROOT=/opt/boost_1_67_0-gcc-7
     - git submodule update --init --recursive
-    - mkdir -p build-gcc-5
-    - cd build-gcc-5
-    - cmake -DCMAKE_BUILD_TYPE=Release ..
-    - make -j8 at-test at-example
+    - mkdir -p build-release
+    - cd build-release
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
+    - ninja -j8 at-test at-example
     - ./at-test
 
-# Clang 3.8 debug with address sanitizer
-clang-3.8-debug-asan:
+# Clang debug with address sanitizer
+clang-debug-asan:
+  tags:
+    - bionic
   script:
+    - export ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer
     - export CXXFLAGS="-fsanitize=address -fno-omit-frame-pointer"
-    - export BOOST_ROOT=/opt/boost_1_60_0-clang-3.8
-    - export CXX=clang++-3.8
-    - export CC=clang-3.8
+    - export BOOST_ROOT=/opt/boost_1_67_0-gcc-7
+    - export CXX=clang++
+    - export CC=clang
     - git submodule update --init --recursive
-    - mkdir -p build-asan
-    - cd build-asan
-    - cmake -DCMAKE_BUILD_TYPE=Debug ..
-    - make -j8 at-test at-example
+    - mkdir -p build-clang-debug-asan
+    - cd build-clang-debug-asan
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug ..
+    - ninja -j8 at-test at-example
     - ./at-test
 
-# Clang 3.8 debug with thread sanitizer
-clang-3.8-debug-tsan:
+# Clang debug with thread sanitizer
+clang-debug-tsan:
   script:
+    - export ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer
     - export CXXFLAGS="-fsanitize=thread -fno-omit-frame-pointer"
-    - export BOOST_ROOT=/opt/boost_1_60_0-clang-3.8
-    - export CXX=clang++-3.8
-    - export CC=clang-3.8
+    - export BOOST_ROOT=/opt/boost_1_67_0-gcc-7
+    - export CXX=clang++
+    - export CC=clang
     - git submodule update --init --recursive
-    - mkdir -p build-tsan
-    - cd build-tsan
-    - cmake -DCMAKE_BUILD_TYPE=Debug ..
-    - make -j8 at-test at-example
+    - mkdir -p build-clang-debug-asan
+    - cd build-clang-debug-asan
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug ..
+    - ninja -j8 at-test at-example
     - ./at-test
 
-# GCC 5 debug valgrind
-gcc-5-debug-valgrind:
+# GCC debug valgrind
+gcc-debug-valgrind:
+  tags:
+    - bionic
   script:
-    - export BOOST_ROOT=/opt/boost_1_60_0-gcc-5
+    - export BOOST_ROOT=/opt/boost_1_67_0-gcc-7
     - git submodule update --init --recursive
-    - mkdir -p build-gcc-5-valgrind
-    - cd build-gcc-5-valgrind
-    - cmake -DCMAKE_BUILD_TYPE=Debug ..
-    - make -j8 at-test at-example
+    - mkdir -p build-gcc-debug-valgrind
+    - cd build-gcc-debug-valgrind
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug ..
+    - ninja -j8 at-test at-example
     - valgrind ./at-test
+
+# MSVC release
+msvc-release:
+  tags:
+    - windows
+  script:
+    - set WD=%cd%
+    - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+    - cd %WD%
+    - set BOOST_ROOT=C:\boost_1_67_0
+    - git submodule update --init --recursive
+    - mkdir build-msvc-release
+    - cd build-msvc-release
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DZLIB_ROOT=C:\zlib-1.2.8 ..
+    - ninja at-test at-example
+    - at-test
+
+# MSVC debug
+msvc-debug:
+  tags:
+    - windows
+  script:
+    - set WD=%cd%
+    - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+    - cd %WD%
+    - set BOOST_ROOT=C:\boost_1_67_0
+    - git submodule update --init --recursive
+    - mkdir build-msvc-debug
+    - cd build-msvc-debug
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DZLIB_ROOT=C:\zlib-1.2.8 ..
+    - ninja at-test at-example
+    - at-test
 
 # Clang-Tidy
 clang-tidy:
+  tags:
+    - bionic
   script:
-    - export BOOST_ROOT=/opt/boost_1_60_0-clang-3.8
-    - export CXX=clang++-3.8
-    - export CC=clang-3.8
+    - export BOOST_ROOT=/opt/boost_1_67_0-gcc-7
+    - export CXX=clang++
+    - export CC=clang
     - git submodule update --init --recursive
     - mkdir build-clang-tidy
     - cd build-clang-tidy
-    - cmake ..
-    - make -j8 lint
+    - cmake -GNinja -DMOTIS_LINT=true ..
+    - ninja -j8 lint
 
 # Clang-Format
 clang-format:
+  tags:
+    - bionic
   script:
-    - export BOOST_ROOT=/opt/boost_1_60_0-clang-3.8
+    - export BOOST_ROOT=/opt/boost_1_67_0-gcc-7
     - git submodule update --init --recursive
     - mkdir build-clang-format
     - cd build-clang-format
-    - cmake ..
-    - make format-check
+    - cmake -GNinja ..
+    - ninja format-check
+
