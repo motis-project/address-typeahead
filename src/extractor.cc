@@ -48,13 +48,13 @@ public:
   void area(osmium::Area const& n) {
     auto const name_tag = n.tags()["name"];
     auto const postal_code_tag = n.tags()["postal_code"];
-    if (!name_tag && !postal_code_tag) {
+    if ((name_tag == nullptr) && (postal_code_tag == nullptr)) {
       return;
     }
 
-    address_typeahead::area a;
+    address_typeahead::area a{};
     auto const population_tag = n.tags()["population"];
-    if (population_tag) {
+    if (population_tag != nullptr) {
       auto const population = atol(population_tag);
       a.popularity_ = static_cast<float>(population);
       population_sum_ += population;
@@ -62,9 +62,9 @@ public:
       a.popularity_ = 0;
     }
 
-    if (name_tag) {
+    if (name_tag != nullptr) {
       auto const admin_level_tag = n.tags()["admin_level"];
-      if (!admin_level_tag) {
+      if (admin_level_tag == nullptr) {
         return;
       }
 
@@ -133,7 +133,7 @@ public:
   }
 
   void way(osmium::Way const& w) {
-    if (!w.tags()["name"] || w.nodes().empty()) {
+    if ((w.tags()["name"] == nullptr) || w.nodes().empty()) {
       return;
     }
 
@@ -193,7 +193,8 @@ public:
     location loc;
     loc.coordinates_ = {n.location().x(), n.location().y()};
 
-    if (n.tags()["addr:housenumber"] && n.tags()["addr:street"]) {
+    if ((n.tags()["addr:housenumber"] != nullptr) &&
+        (n.tags()["addr:street"] != nullptr)) {
 
       auto house_number = std::string(n.tags()["addr:housenumber"]);
       auto hn_it = house_numbers_.find(house_number);
@@ -216,7 +217,7 @@ public:
       }
     }
 
-    if (n.tags()["name"]) {
+    if (n.tags()["name"] != nullptr) {
       auto const name = std::string(n.tags()["name"]);
 
       if (name.length() >= 3) {
@@ -360,7 +361,7 @@ void update_progress(float& percentage, float const inc_val) {
 
 void extract_options::whitelist_add(std::string const& tag,
                                     std::string const& value) {
-  if (value == "") {
+  if (value.empty()) {
     whitelist_.add_rule(true, tag);
   } else {
     whitelist_.add_rule(true, tag, value);
@@ -369,7 +370,7 @@ void extract_options::whitelist_add(std::string const& tag,
 
 void extract_options::blacklist_add(std::string const& tag,
                                     std::string const& value) {
-  if (value == "") {
+  if (value.empty()) {
     blacklist_.add_rule(true, tag);
   } else {
     blacklist_.add_rule(true, tag, value);

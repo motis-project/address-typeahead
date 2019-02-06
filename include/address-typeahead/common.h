@@ -77,7 +77,7 @@ struct typeahead_context {
 
   bool get_coordinates(index_t id, double& lat, double& lon) const;
 
-  bool coordinates_for_house_number(index_t id, std::string house_number,
+  bool coordinates_for_house_number(index_t id, std::string const& house_number,
                                     double& lat, double& lon) const;
 
   std::vector<index_t> get_area_ids(index_t id,

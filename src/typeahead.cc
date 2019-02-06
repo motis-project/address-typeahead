@@ -1,6 +1,7 @@
 #include "address-typeahead/typeahead.h"
 
 #include <algorithm>
+#include <utility>
 
 using namespace guess;
 
@@ -29,8 +30,8 @@ std::vector<std::pair<std::string, float>> get_names(
   return result;
 }
 
-typeahead::typeahead(typeahead_context const context)
-    : context_(context),
+typeahead::typeahead(typeahead_context context)
+    : context_(std::move(context)),
       place_guesser_(get_names(context_, false)),
       area_guesser_(get_names(context_, true)) {
 

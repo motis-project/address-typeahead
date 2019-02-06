@@ -18,10 +18,9 @@ bool typeahead_context::get_coordinates(index_t id, double& lat,
   return false;
 }
 
-bool typeahead_context::coordinates_for_house_number(index_t id,
-                                                     std::string house_number,
-                                                     double& lat,
-                                                     double& lon) const {
+bool typeahead_context::coordinates_for_house_number(
+    index_t id, std::string const& house_number, double& lat,
+    double& lon) const {
   if (!is_street(id)) {
     return false;
   }
@@ -43,14 +42,14 @@ std::vector<index_t> typeahead_context::get_area_ids(
   if (is_place(id)) {
     for (auto const& area_id : places_[id].areas_) {
       auto const& a = areas_[area_id];
-      if (a.level_ & levels) {
+      if ((a.level_ & levels) != 0u) {
         result.emplace_back(area_id);
       }
     }
   } else if (is_street(id)) {
     for (auto const& area_id : streets_[id - places_.size()].areas_) {
       auto const& a = areas_[area_id];
-      if (a.level_ & levels) {
+      if ((a.level_ & levels) != 0u) {
         result.emplace_back(area_id);
       }
     }

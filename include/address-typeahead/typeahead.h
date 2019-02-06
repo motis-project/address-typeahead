@@ -29,7 +29,7 @@ struct complete_options {
 
 struct typeahead {
 
-  explicit typeahead(typeahead_context const context);
+  explicit typeahead(typeahead_context context);
 
   std::vector<index_t> complete(std::vector<std::string> const& strings,
                                 size_t max_results = 10) const;
