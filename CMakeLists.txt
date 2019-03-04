@@ -1,10 +1,10 @@
+cmake_minimum_required(VERSION 3.0)
 project(address-typeahead)
-cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  # required for clang-tidy
 
 if (NOT MSVC)
-	set(compiler-flags "-std=c++14 -Wall -Werror -Wextra")
+  set(compiler-flags "-std=c++14 -Wall -Werror -Wextra")
 else()
   set(compiler-flags "-DNOMINMAX -DXML_STATIC")
 endif()
@@ -29,11 +29,12 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 ################################
 find_package(Threads)
 
-
 if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/deps")
   add_subdirectory(deps)
 endif()
+add_subdirectory(external_lib/cereal EXCLUDE_FROM_ALL)
 add_subdirectory(external_lib/guess EXCLUDE_FROM_ALL)
+
 
 ################################
 # Library
@@ -43,15 +44,16 @@ add_library(address-typeahead EXCLUDE_FROM_ALL ${address-typeahead-files})
 if (MSVC)
   target_link_libraries(address-typeahead ws2_32)
 endif()
-target_link_libraries(address-typeahead guess zlibstatic expat ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(address-typeahead
+  osmium
+  protozero
+  guess
+  cereal
+  zlibstatic
+  expat
+  ${CMAKE_THREAD_LIBS_INIT}
+)
 set_target_properties(address-typeahead PROPERTIES COMPILE_FLAGS ${compiler-flags})
-target_include_directories(address-typeahead PUBLIC
-  SYSTEM external_lib/expat/include
-  SYSTEM external_lib/osmium/include
-  SYSTEM external_lib/zlib
-  SYSTEM external_lib/protozero/include
-  SYSTEM ${CMAKE_CURRENT_BINARY_DIR}/external_lib/zlib)
-target_include_directories(address-typeahead PUBLIC SYSTEM external_lib/cereal/include)
 target_include_directories(address-typeahead PUBLIC include)
 
 
@@ -92,14 +94,14 @@ add_custom_target(address-typeahead-format-check
 ################################
 add_custom_target(address-typeahead-lint
   /usr/bin/python
-	${CMAKE_CURRENT_SOURCE_DIR}/tools/run-clang-tidy.py
-	  -exit-on-error
+  ${CMAKE_CURRENT_SOURCE_DIR}/tools/run-clang-tidy.py
+    -exit-on-error
       -quiet
       -clang-tidy-binary clang-tidy-6.0
-	  -header-filter "^${CMAKE_CURRENT_SOURCE_DIR}(include/)"
-	  "^${CMAKE_CURRENT_SOURCE_DIR}/include/"
-	  "^${CMAKE_CURRENT_SOURCE_DIR}/src/"
-	  "^${CMAKE_CURRENT_SOURCE_DIR}/test/"
+    -header-filter "^${CMAKE_CURRENT_SOURCE_DIR}(include/)"
+    "^${CMAKE_CURRENT_SOURCE_DIR}/include/"
+    "^${CMAKE_CURRENT_SOURCE_DIR}/src/"
+    "^${CMAKE_CURRENT_SOURCE_DIR}/test/"
   COMMENT "Running clang-tidy"
   VERBATIM
 )
