@@ -29,7 +29,10 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 ################################
 find_package(Threads)
 
-add_subdirectory(deps)
+
+if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/deps")
+  add_subdirectory(deps)
+endif()
 add_subdirectory(external_lib/guess EXCLUDE_FROM_ALL)
 
 ################################
