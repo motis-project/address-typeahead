@@ -1,0 +1,5 @@
+git@git.motis-project.de:lib/expat.git      4bb7ffd336872c8199f2fc91a081931659976a44
+git@git.motis-project.de:lib/googletest.git 2aa7123de28b75e58d21c20262e5937aa89c4bc5
+git@git.motis-project.de:lib/osmium.git     8f53cd67f95fadedb93e8ff2724b96d37d55a53d
+git@git.motis-project.de:lib/protozero.git  8efbc8a271e59b34552a72a29f4abd5f1036db46
+git@git.motis-project.de:lib/zlib.git       5beee49dc1a7cccf35258fda1f28a08971bd77c0

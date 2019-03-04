@@ -29,11 +29,8 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 ################################
 find_package(Threads)
 
-add_subdirectory(external_lib/googletest/googletest EXCLUDE_FROM_ALL)
-add_subdirectory(external_lib/expat EXCLUDE_FROM_ALL)
+add_subdirectory(deps)
 add_subdirectory(external_lib/guess EXCLUDE_FROM_ALL)
-add_subdirectory(external_lib/zlib EXCLUDE_FROM_ALL)
-
 
 ################################
 # Library
