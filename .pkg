@@ -5,7 +5,7 @@
 [googletest]
   url=git@git.motis-project.de:lib/googletest.git
   branch=motis
-  commit=2aa7123de28b75e58d21c20262e5937aa89c4bc5
+  commit=1703e77c8c8773bb17e5044342bccce996afd75f
 [osmium]
   url=git@git.motis-project.de:lib/osmium.git
   branch=master
@@ -18,3 +18,4 @@
   url=git@git.motis-project.de:lib/zlib.git
   branch=master
   commit=412ab9a1f440f4ce1331d4226b6c814470524e19
+
