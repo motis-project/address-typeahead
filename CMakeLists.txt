@@ -73,7 +73,6 @@ file(GLOB_RECURSE at-test-files test/*.cc)
 add_executable(at-test EXCLUDE_FROM_ALL ${at-test-files})
 target_link_libraries(at-test address-typeahead gtest gtest_main)
 set_target_properties(at-test PROPERTIES COMPILE_FLAGS ${compiler-flags})
-target_include_directories(at-test PRIVATE SYSTEM external_lib/googletest/googletest/include)
 
 
 ################################
