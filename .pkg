@@ -9,11 +9,11 @@
 [osmium]
   url=git@git.motis-project.de:lib/osmium.git
   branch=master
-  commit=8f53cd67f95fadedb93e8ff2724b96d37d55a53d
+  commit=85c14d61b1d98ecb32226e1924b2b6bccfa09cb3
 [protozero]
   url=git@git.motis-project.de:lib/protozero.git
   branch=tiles
-  commit=c217d7356989541e957e18e0e7fe136b3b448f94
+  commit=8efbc8a271e59b34552a72a29f4abd5f1036db46
 [zlib]
   url=git@git.motis-project.de:lib/zlib.git
   branch=master
