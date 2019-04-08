@@ -5,7 +5,7 @@
 [googletest]
   url=git@git.motis-project.de:lib/googletest.git
   branch=motis
-  commit=dd20c01a05cbc8e3ae1357bd541c39cd0f69d9b5
+  commit=1703e77c8c8773bb17e5044342bccce996afd75f
 [osmium]
   url=git@git.motis-project.de:lib/osmium.git
   branch=master
@@ -13,7 +13,7 @@
 [protozero]
   url=git@git.motis-project.de:lib/protozero.git
   branch=tiles
-  commit=8efbc8a271e59b34552a72a29f4abd5f1036db46
+  commit=c217d7356989541e957e18e0e7fe136b3b448f94
 [zlib]
   url=git@git.motis-project.de:lib/zlib.git
   branch=master
