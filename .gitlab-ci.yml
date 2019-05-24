@@ -86,6 +86,7 @@ msvc-debug:
 clang-tidy:
   tags:
     - bionic
+    - clang-8
   script:
     - export BOOST_ROOT=/opt/boost_1_70_0-clang-8
     - export PATH=/opt/clang-8.0/bin:$PATH
@@ -100,6 +101,7 @@ clang-tidy:
 clang-format:
   tags:
     - bionic
+    - clang-8
   script:
     - export BOOST_ROOT=/opt/boost_1_70_0-clang-8
     - export PATH=/opt/clang-8.0/bin:$PATH
