@@ -9,7 +9,6 @@ else()
   set(compiler-flags "-DNOMINMAX -DXML_STATIC")
 endif()
 
-
 ################################
 # 3rd Party (Boost, pthread)
 ################################
@@ -33,6 +32,18 @@ include(cmake/pkg.cmake)
 
 add_subdirectory(external_lib/cereal EXCLUDE_FROM_ALL)
 add_subdirectory(external_lib/guess EXCLUDE_FROM_ALL)
+
+
+
+################################
+# Linter
+################################
+option(ADDRESS_TYPEAHEAD_LINT "Run clang-tidy with the compiler." OFF)
+if(ADDRESS_TYPEAHEAD_LINT)
+  # clang-tidy will be run on all targets defined hereafter
+  include(cmake/clang-tidy.cmake)
+endif()
+
 
 
 ################################
@@ -85,22 +96,3 @@ add_custom_target(address-typeahead-format-check
   COMMENT "Checking source code formatting"
   VERBATIM
 )
-
-
-################################
-# Lint
-################################
-add_custom_target(address-typeahead-lint
-  /usr/bin/python
-  ${CMAKE_CURRENT_SOURCE_DIR}/tools/run-clang-tidy.py
-    -exit-on-error
-      -quiet
-      -clang-tidy-binary clang-tidy-6.0
-    -header-filter "^${CMAKE_CURRENT_SOURCE_DIR}(include/)"
-    "^${CMAKE_CURRENT_SOURCE_DIR}/include/"
-    "^${CMAKE_CURRENT_SOURCE_DIR}/src/"
-    "^${CMAKE_CURRENT_SOURCE_DIR}/test/"
-  COMMENT "Running clang-tidy"
-  VERBATIM
-)
-add_dependencies(address-typeahead-lint address-typeahead at-test at-example)
