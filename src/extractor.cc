@@ -440,8 +440,8 @@ typeahead_context extract(std::string const& input_path,
   } else {
     std::cout << "calculating approximations for polygons... " << std::endl
               << std::flush;
-    auto percentage = 0.0f;
-    auto const inc_val = (1.0f / values.size()) * 100.1f;
+    auto percentage = 0.0F;
+    auto const inc_val = (1.0F / values.size()) * 100.1F;
     auto const max_dim = options.approximation_lvl_;
     for (index_t i = 0; i != values.size(); ++i) {
       std::vector<box> split_boxes;
@@ -459,8 +459,8 @@ typeahead_context extract(std::string const& input_path,
   rtree.insert(final_values.begin(), final_values.end());
 
   std::cout << "generating streets... " << std::endl << std::flush;
-  auto percentage = 0.0f;
-  auto const inc_val = (1.0f / place_handler.streets_.size()) * 100.1f;
+  auto percentage = 0.0F;
+  auto const inc_val = (1.0F / place_handler.streets_.size()) * 100.1F;
   for (auto& str_it : place_handler.streets_) {
     for (auto& loc : str_it.second) {
       auto const p = point(loc.coordinates_.lon_, loc.coordinates_.lat_);

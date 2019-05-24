@@ -16,7 +16,7 @@ std::vector<std::pair<std::string, float>> get_names(
       if (a.level_ != POSTCODE) {
         result.emplace_back(context.area_names_[a.name_idx_], a.popularity_);
       } else {
-        result.emplace_back("", 0.0f);
+        result.emplace_back("", 0.0F);
       }
     }
     return result;
@@ -25,7 +25,7 @@ std::vector<std::pair<std::string, float>> get_names(
   auto result = std::vector<std::pair<std::string, float>>();
   result.reserve(context.names_.size());
   for (auto const& name : context.names_) {
-    result.emplace_back(name, 1.0f);
+    result.emplace_back(name, 1.0F);
   }
   return result;
 }
@@ -145,15 +145,15 @@ std::vector<index_t> typeahead::complete(
     max_str_len = std::max(max_str_len, str.length());
     string_weights.emplace_back(str.length());
   }
-  auto const normalization_val = 1.0f / static_cast<float>(max_str_len);
+  auto const normalization_val = 1.0F / static_cast<float>(max_str_len);
   for (size_t i = 0; i != string_weights.size(); ++i) {
-    string_weights[i] = std::max(0.6f, string_weights[i] * normalization_val);
+    string_weights[i] = std::max(0.6F, string_weights[i] * normalization_val);
   }
 
   auto max_cos_sim_place = std::vector<float>(place_guess_to_index_.size());
   auto max_cos_sim_area = std::vector<float>(area_guess_to_index_.size());
-  std::fill(max_cos_sim_place.begin(), max_cos_sim_place.end(), 0.0f);
-  std::fill(max_cos_sim_area.begin(), max_cos_sim_area.end(), 0.0f);
+  std::fill(max_cos_sim_place.begin(), max_cos_sim_place.end(), 0.0F);
+  std::fill(max_cos_sim_area.begin(), max_cos_sim_area.end(), 0.0F);
 
   if (options.first_string_is_place_) {
     auto const& place_guesses =
@@ -190,7 +190,7 @@ std::vector<index_t> typeahead::complete(
   }
 
   for (size_t i = 0; i != acc_.size(); ++i) {
-    acc_[i] = std::pair<index_t, float>(i, 0.0f);
+    acc_[i] = std::pair<index_t, float>(i, 0.0F);
   }
 
   for (size_t i = 0; i != place_guess_to_index_.size(); ++i) {
@@ -214,7 +214,7 @@ std::vector<index_t> typeahead::complete(
     auto const pc_it = postcode_to_index_.find(pc);
     if (pc_it != postcode_to_index_.end()) {
       for (auto const& pc_idx : pc_it->second) {
-        acc_[pc_idx].second += 1.0f;
+        acc_[pc_idx].second += 1.0F;
       }
     }
   }
@@ -253,7 +253,7 @@ std::vector<index_t> typeahead::complete(
       acc_[i].second = static_cast<float>(num_of_postcode_matches) /
                        static_cast<float>(postcodes.size());
     } else {
-      acc_[i].second = 0.0f;
+      acc_[i].second = 0.0F;
     }
   }
 
@@ -262,7 +262,7 @@ std::vector<index_t> typeahead::complete(
   for (size_t str_i = 0; str_i != guess_strings.size(); ++str_i) {
     auto const& str = guess_strings[str_i];
     auto const guesses = new_guesser.guess_match(str, options.max_guesses_);
-    std::fill(max_value.begin(), max_value.end(), 0.0f);
+    std::fill(max_value.begin(), max_value.end(), 0.0F);
     for (auto const& g : guesses) {
       max_value[index_translation_table[g.index]] =
           std::max(max_value[index_translation_table[g.index]], g.cos_sim);

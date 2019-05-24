@@ -15,7 +15,7 @@
 
 std::string get_place_string(
     size_t id, address_typeahead::typeahead_context const& context) {
-  std::string result = "";
+  std::string result;
   result += context.get_name(id) + " { ";
   auto const areas = context.get_area_names(id);
   for (auto const& a : areas) {
@@ -64,7 +64,7 @@ std::vector<address_typeahead::index_t> parse_string_and_complete(
     }
   }
 
-  if (sub_strings.size() == 0) {
+  if (sub_strings.empty()) {
     return std::vector<address_typeahead::index_t>();
   }
 
@@ -73,7 +73,7 @@ std::vector<address_typeahead::index_t> parse_string_and_complete(
   options.string_chain_len_ = 2;
   auto const candidates = t.complete(sub_strings, options);
 
-  if (house_number != "") {
+  if (!house_number.empty()) {
     double lon, lat;
     if (house_number == ".") {
       if (context.get_coordinates(candidates[0], lat, lon)) {
