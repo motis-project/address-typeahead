@@ -28,6 +28,8 @@ clang-debug-asan:
 
 # Clang debug with thread sanitizer
 clang-debug-tsan:
+  tags:
+    - bionic
   script:
     - export ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer
     - export CXXFLAGS="-fsanitize=thread -fno-omit-frame-pointer"
