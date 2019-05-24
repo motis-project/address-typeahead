@@ -29,9 +29,8 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 ################################
 find_package(Threads)
 
-if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/deps")
-  add_subdirectory(deps)
-endif()
+include(cmake/pkg.cmake)
+
 add_subdirectory(external_lib/cereal EXCLUDE_FROM_ALL)
 add_subdirectory(external_lib/guess EXCLUDE_FROM_ALL)
 
