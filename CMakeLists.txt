@@ -4,7 +4,7 @@ project(address-typeahead)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  # required for clang-tidy
 
 if (NOT MSVC)
-  set(compiler-flags "-std=c++14 -Wall -Werror -Wextra")
+  set(compiler-flags "-Wall -Werror -Wextra")
 else()
   set(compiler-flags "-DNOMINMAX -DXML_STATIC")
 endif()
