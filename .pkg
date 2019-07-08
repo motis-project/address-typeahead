@@ -13,7 +13,7 @@
 [protozero]
   url=git@git.motis-project.de:lib/protozero.git
   branch=tiles
-  commit=c217d7356989541e957e18e0e7fe136b3b448f94
+  commit=855ce94a2d1441db7e48a8e5505eac742777759b
 [zlib]
   url=git@git.motis-project.de:lib/zlib.git
   branch=master
