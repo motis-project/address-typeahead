@@ -4,7 +4,7 @@ project(address-typeahead)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  # required for clang-tidy
 
 if (NOT MSVC)
-  set(compiler-flags "-std=c++17 -Wall -Werror -Wextra")
+  set(compiler-flags "-Wall -Werror -Wextra")
 else()
   set(compiler-flags "-DNOMINMAX -DXML_STATIC")
 endif()
@@ -51,6 +51,8 @@ endif()
 ################################
 file(GLOB_RECURSE address-typeahead-files src/*.cc)
 add_library(address-typeahead EXCLUDE_FROM_ALL ${address-typeahead-files})
+target_compile_features(address-typeahead PUBLIC cxx_std_17)
+target_compile_definitions(address-typeahead PUBLIC NOMINMAX)
 if (MSVC)
   target_link_libraries(address-typeahead ws2_32)
 endif()

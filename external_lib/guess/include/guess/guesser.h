@@ -17,7 +17,7 @@ struct guesser {
 
   guesser(std::vector<std::pair<std::string, float>> const& candidates);
 
-  std::vector<match> guess_match(std::string in, int count = 10) const;
+  std::vector<match> guess_match(std::string in, size_t count = 10) const;
 
   std::vector<float> match_sqrts_;
   std::vector<std::vector<unsigned>> index_;

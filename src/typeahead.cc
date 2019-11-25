@@ -97,7 +97,7 @@ std::vector<index_t> typeahead::complete(
     for (size_t i = start_i; i + 1 < clean_strings.size(); ++i) {
       auto const chain_len =
           std::min(options.string_chain_len_,
-                   static_cast<unsigned>(clean_strings.size() - i));
+                   static_cast<size_t>(clean_strings.size() - i));
       auto str = clean_strings[i];
       for (size_t j = 1; j != chain_len; ++j) {
         str = str + " " + clean_strings[i + j];
@@ -143,7 +143,7 @@ std::vector<index_t> typeahead::complete(
   auto string_weights = std::vector<float>();
   for (auto const& str : guess_strings) {
     max_str_len = std::max(max_str_len, str.length());
-    string_weights.emplace_back(str.length());
+    string_weights.emplace_back(static_cast<float>(str.length()));
   }
   auto const normalization_val = 1.0F / static_cast<float>(max_str_len);
   for (size_t i = 0; i != string_weights.size(); ++i) {
@@ -190,7 +190,7 @@ std::vector<index_t> typeahead::complete(
   }
 
   for (size_t i = 0; i != acc_.size(); ++i) {
-    acc_[i] = std::pair<index_t, float>(i, 0.0F);
+    acc_[i] = {static_cast<index_t>(i), 0.0F};
   }
 
   for (size_t i = 0; i != place_guess_to_index_.size(); ++i) {
@@ -230,7 +230,7 @@ std::vector<index_t> typeahead::complete(
   for (size_t i = 0; i != i_max; ++i) {
     place_strings.emplace_back(context_.get_name(acc_[i].first),
                                options.place_bias_);
-    index_translation_table.emplace_back(i);
+    index_translation_table.emplace_back(static_cast<index_t>(i));
 
     auto num_of_postcode_matches = 0;
     auto const area_ids = context_.get_area_ids(acc_[i].first);
@@ -246,7 +246,7 @@ std::vector<index_t> typeahead::complete(
       }
       place_strings.emplace_back(context_.area_names_[a.name_idx_],
                                  a.popularity_);
-      index_translation_table.emplace_back(i);
+      index_translation_table.emplace_back(static_cast<index_t>(i));
     }
 
     if (!postcodes.empty()) {

@@ -40,7 +40,7 @@ guesser::guesser(std::vector<std::pair<std::string, float>> const& candidates) {
 }
 
 std::vector<guesser::match> guesser::guess_match(std::string in,
-                                                 int count) const {
+                                                 size_t count) const {
   normalize(in);
 
   if (in.length() < 3) {

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 project(guess)
 
 add_library(guess src/guesser.cc)
-set_target_properties(guess PROPERTIES COMPILE_FLAGS "-std=c++14")
+target_compile_features(guess PUBLIC cxx_std_14)
 target_include_directories(guess PUBLIC include)
 
 add_executable(guess-example EXCLUDE_FROM_ALL example/main.cc)

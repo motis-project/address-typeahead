@@ -19,12 +19,12 @@ struct complete_options {
 
   float min_sim_ = 0.01f;
 
-  unsigned max_guesses_ = 100;
-  unsigned max_results_ = 10;
+  size_t max_guesses_ = 100;
+  size_t max_results_ = 10;
 
   // by using a string_chain_len_ > 1 the complete functions evaluates multiple
   // sequential strings together instead of evaluating each string in isolation
-  unsigned string_chain_len_ = 1;
+  size_t string_chain_len_ = 1;
 };
 
 struct typeahead {
