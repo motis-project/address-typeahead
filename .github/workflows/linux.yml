@@ -34,7 +34,6 @@ jobs:
         exclude:
         - cxx: clang-9-san
           mode: Release
-          lint: Off
         include:
         - cxx: clang-9
           mode: Debug
