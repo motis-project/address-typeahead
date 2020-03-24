@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 project(address-typeahead)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  # required for clang-tidy
+option(AT_LINT "Run clang-tidy with the compiler." OFF)
+if(AT_LINT)
+  include(cmake/clang-tidy.cmake)
+endif()
 
 if (NOT MSVC)
   set(compiler-flags "-Wall -Werror -Wextra")
@@ -10,7 +13,7 @@ else()
 endif()
 
 ################################
-# 3rd Party (Boost, pthread)
+# Boost
 ################################
 if (MSVC)
   set(Boost_USE_STATIC_LIBS ON)
@@ -27,12 +30,7 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 # Dependencies
 ################################
 find_package(Threads)
-
 include(cmake/pkg.cmake)
-
-add_subdirectory(external_lib/cereal EXCLUDE_FROM_ALL)
-add_subdirectory(external_lib/guess EXCLUDE_FROM_ALL)
-
 
 
 ################################
@@ -43,7 +41,6 @@ if(ADDRESS_TYPEAHEAD_LINT)
   # clang-tidy will be run on all targets defined hereafter
   include(cmake/clang-tidy.cmake)
 endif()
-
 
 
 ################################
@@ -85,16 +82,3 @@ file(GLOB_RECURSE at-test-files test/*.cc)
 add_executable(at-test EXCLUDE_FROM_ALL ${at-test-files})
 target_link_libraries(at-test address-typeahead gtest gtest_main)
 set_target_properties(at-test PROPERTIES COMPILE_FLAGS ${compiler-flags})
-
-
-################################
-# clang-format check
-################################
-add_custom_target(address-typeahead-format-check
-  find src include test example -type f -name "*.cc" -o -name "*.h" -print0 | xargs -0 clang-format -i
-  COMMAND
-  git status --porcelain | xargs -I {} -0 test -z \"{}\"
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMENT "Checking source code formatting"
-  VERBATIM
-)

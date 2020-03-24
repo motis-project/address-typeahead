@@ -1,20 +1,28 @@
 [expat]
-  url=git@git.motis-project.de:lib/expat.git
+  url=git@github.com:motis-project/expat.git
   branch=master
   commit=4bb7ffd336872c8199f2fc91a081931659976a44
 [googletest]
-  url=git@git.motis-project.de:lib/googletest.git
-  branch=motis
+  url=git@github.com:motis-project/googletest.git
+  branch=master
   commit=f71fb4f9a912ec945401cc49a287a759b6131026
 [osmium]
-  url=git@git.motis-project.de:lib/osmium.git
+  url=git@github.com:motis-project/osmium.git
   branch=master
   commit=5c5e2d61b2defb4bb065fa31b4270e6f96293e71
 [protozero]
-  url=git@git.motis-project.de:lib/protozero.git
-  branch=tiles
-  commit=855ce94a2d1441db7e48a8e5505eac742777759b
+  url=git@github.com:motis-project/protozero.git
+  branch=master
+  commit=8efbc8a271e59b34552a72a29f4abd5f1036db46
 [zlib]
-  url=git@git.motis-project.de:lib/zlib.git
+  url=git@github.com:motis-project/zlib.git
   branch=master
   commit=8e7c86d3a0e49101b9a67d74c4a07345dcb0e485
+[cereal]
+  url=git@github.com:motis-project/cereal.git
+  branch=master
+  commit=a5a30953125e70b115a28dd76b64adf3c97cc883
+[guess]
+  url=git@github.com:motis-project/guess.git
+  branch=master
+  commit=5d46f485f56ec9a79b17d4aa30fc4a90c5c6c4cd
