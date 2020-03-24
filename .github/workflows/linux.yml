@@ -62,4 +62,6 @@ jobs:
         ccache -s
 
     - name: Run Tests
-      run: ./build/at-test
+      run: |
+        cd build
+        ./at-test
