@@ -27,4 +27,4 @@ jobs:
     - name: Run tests
       run: |
         cd build
-        ${{ matrix.mode }}\utl-test.exe
+        ${{ matrix.mode }}\at-test.exe
