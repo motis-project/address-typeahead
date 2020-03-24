@@ -31,13 +31,12 @@ jobs:
         cxx: [gcc-9, clang-9, clang-9-san]
         mode: [Debug, Release]
         lint: [Off]
+        include:
+        - cxx: clang-9
+          lint: On
         exclude:
         - cxx: clang-9-san
           mode: Release
-        include:
-        - cxx: clang-9
-          mode: Debug
-          lint: On
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_NOHASHDIR: true
