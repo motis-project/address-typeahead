@@ -35,10 +35,6 @@ jobs:
         - cxx: clang-9-san
           mode: Release
           lint: Off
-        include:
-        - cxx: clang-9
-          mode: Debug
-          lint: On
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_NOHASHDIR: true
