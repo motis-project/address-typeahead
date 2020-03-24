@@ -33,6 +33,8 @@ jobs:
         lint: [Off, On]
         exclude:
         - mode: Release
+          cxx: clang-9-san
+        - mode: Release
           lint: On
         - cxx: gcc-9
           lint: On
