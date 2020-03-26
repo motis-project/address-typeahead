@@ -30,11 +30,16 @@ jobs:
       matrix:
         cxx: [gcc-9, clang-9, clang-9-san]
         mode: [Debug, Release]
-        lint: [Off]
+        lint: [Off, On]
         exclude:
+        - mode: Release
+          cxx: clang-9-san
+        - mode: Release
+          lint: On
+        - cxx: gcc-9
+          lint: On
         - cxx: clang-9-san
-          mode: Release
-          lint: Off
+          lint: On
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_NOHASHDIR: true

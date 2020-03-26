@@ -5,15 +5,15 @@
 [googletest]
   url=git@github.com:motis-project/googletest.git
   branch=master
-  commit=f71fb4f9a912ec945401cc49a287a759b6131026
+  commit=337308e8f74d7020c9b21544561e759bbfb01abf
 [osmium]
-  url=git@github.com:motis-project/osmium.git
+  url=git@github.com:motis-project/libosmium.git
   branch=master
-  commit=5c5e2d61b2defb4bb065fa31b4270e6f96293e71
+  commit=672690671b26a38eb163c2487012f50100b7ee74
 [protozero]
   url=git@github.com:motis-project/protozero.git
   branch=master
-  commit=8efbc8a271e59b34552a72a29f4abd5f1036db46
+  commit=8c9f3fa97c2cfdceef86d0b61818ae98e9328f29
 [zlib]
   url=git@github.com:motis-project/zlib.git
   branch=master
