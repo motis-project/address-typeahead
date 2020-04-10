@@ -1,3 +1,7 @@
+[cereal]
+  url=git@github.com:motis-project/cereal.git
+  branch=master
+  commit=770b159174e19c6948e3abe394cc7c29d004154d
 [expat]
   url=git@github.com:motis-project/expat.git
   branch=master
@@ -6,7 +10,11 @@
   url=git@github.com:motis-project/googletest.git
   branch=master
   commit=337308e8f74d7020c9b21544561e759bbfb01abf
-[osmium]
+[guess]
+  url=git@github.com:motis-project/guess.git
+  branch=master
+  commit=5d46f485f56ec9a79b17d4aa30fc4a90c5c6c4cd
+[libosmium]
   url=git@github.com:motis-project/libosmium.git
   branch=master
   commit=672690671b26a38eb163c2487012f50100b7ee74
@@ -18,11 +26,3 @@
   url=git@github.com:motis-project/zlib.git
   branch=master
   commit=8e7c86d3a0e49101b9a67d74c4a07345dcb0e485
-[cereal]
-  url=git@github.com:motis-project/cereal.git
-  branch=master
-  commit=a5a30953125e70b115a28dd76b64adf3c97cc883
-[guess]
-  url=git@github.com:motis-project/guess.git
-  branch=master
-  commit=5d46f485f56ec9a79b17d4aa30fc4a90c5c6c4cd
