@@ -23,7 +23,9 @@ jobs:
     - uses: seanmiddleditch/gha-setup-ninja@master
     
     - name: Setup Build Tools
-      run: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat"
+      run: |
+        FOR /F "tokens=*" %a in ('"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -find **\vcvars64.bat') do SET OUTPUT=%a
+        "%OUTPUT%"
 
     - name: CMake
       run: cmake -GNinja -S . -B build
