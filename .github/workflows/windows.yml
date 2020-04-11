@@ -24,8 +24,10 @@ jobs:
     
     - name: Setup Build Tools
       run: |
-        FOR /F "tokens=*" %a in ('"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -find **\vcvars64.bat') do SET OUTPUT=%a
-        "%OUTPUT%"
+        git clone https://github.com/majkinetor/posh
+        ./posh/setup.ps1
+        $VCVARS=$(& "${Env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -find **\vcvars64.bat)
+        Invoke-Environment $VCVARS 
 
     - name: CMake
       run: cmake -GNinja -S . -B build
