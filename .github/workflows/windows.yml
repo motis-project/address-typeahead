@@ -24,7 +24,7 @@ jobs:
     
     - name: Setup Build Tools
       run: |
-        Install-module posh-vs
+        Install-module posh-vs -Force
         Install-PoshVs
 
     - name: CMake
