@@ -1,3 +1,4 @@
+ 
 name: Windows Build
 
 on:
@@ -5,6 +6,10 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+
+env:
+  CXX: cl
+  CC: cl
 
 jobs:
   build:
@@ -16,15 +21,18 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: microsoft/setup-msbuild@v1.0.0
-
-    - name: CMake
-      run: cmake -G "Visual Studio 16 2019" -A x64 -S . -B build
+    - uses: seanmiddleditch/gha-setup-ninja@master
 
     - name: Build
-      run: cmake --build build --target at-example at-test --config ${{ matrix.mode }}
+      run: |
+        $devShell = &"${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -find **\Microsoft.VisualStudio.DevShell.dll
+        $installPath = &"${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationpath
+        Import-Module $devShell
+        Enter-VsDevShell -VsInstallPath $installPath -SkipAutomaticLocation -DevCmdArguments "-arch=amd64"
+        cmake -GNinja -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.mode }}
+        cmake --build build --target at-example at-test
 
     - name: Run tests
       run: |
         cd build
-        ${{ matrix.mode }}\at-test.exe
+        .\at-test.exe
