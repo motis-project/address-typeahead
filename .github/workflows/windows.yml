@@ -15,8 +15,8 @@ jobs:
         mode: [Debug, Release]
 
     env:
-      CXX: cl.exe
-      CC: cl.exe
+      CXX: cl
+      CC: cl
 
     steps:
     - uses: actions/checkout@v2
@@ -36,4 +36,4 @@ jobs:
     - name: Run tests
       run: |
         cd build
-        at-test.exe
+        .\at-test.exe
