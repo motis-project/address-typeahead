@@ -24,23 +24,8 @@ jobs:
     
     - name: Setup Build Tools
       run: |
-        function Invoke-Environment {
-            param
-            (
-                # Any cmd shell command, normally a configuration batch file.
-                [Parameter(Mandatory=$true)]
-                [string] $Command
-            )
-
-            $Command = "`"" + $Command + "`""
-            cmd /c "$Command > nul 2>&1 && set" | . { process {
-                if ($_ -match '^([^=]+)=(.*)') {
-                    [System.Environment]::SetEnvironmentVariable($matches[1], $matches[2])
-                }
-            }}
-        }
-        $VCVARS=$(& "${Env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -find **\vcvars64.bat)
-        Invoke-Environment $VCVARS 
+        Install-module posh-vs
+        Install-PoshVs
 
     - name: CMake
       run: cmake -GNinja -S . -B build
