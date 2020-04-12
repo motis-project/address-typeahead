@@ -1,3 +1,4 @@
+ 
 name: Windows Build
 
 on:
@@ -5,6 +6,10 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+
+env:
+  CXX: cl
+  CC: cl
 
 jobs:
   build:
@@ -14,24 +19,18 @@ jobs:
       matrix:
         mode: [Debug, Release]
 
-    env:
-      CXX: cl
-      CC: cl
-
     steps:
     - uses: actions/checkout@v2
-    - uses: seanmiddleditch/gha-setup-ninja@master
-    
-    - name: Setup Build Tools
-      run: |
-        Install-module posh-vs -Force
-        Install-PoshVs
-
-    - name: CMake
-      run: cmake -GNinja -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.mode }}
+    - uses: microsoft/setup-msbuild@v1.0.0
 
     - name: Build
-      run: cmake --build build --target at-example at-test
+      run: |
+        $devShell = &"${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -find **\Microsoft.VisualStudio.DevShell.dll
+        $installPath = &"${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationpath
+        Import-Module $devShell
+        Enter-VsDevShell -VsInstallPath $installPath -SkipAutomaticLocation -DevCmdArguments "-arch=amd64"
+        cmake -GNinja -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.mode }}
+        cmake --build build --target at-example at-test
 
     - name: Run tests
       run: |
