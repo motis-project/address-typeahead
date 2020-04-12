@@ -28,12 +28,12 @@ jobs:
         Install-PoshVs
 
     - name: CMake
-      run: cmake -GNinja -S . -B build
+      run: cmake -GNinja -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.mode }}
 
     - name: Build
-      run: cmake --build build --target at-example at-test --config ${{ matrix.mode }}
+      run: cmake --build build --target at-example at-test
 
     - name: Run tests
       run: |
         cd build
-        ${{ matrix.mode }}\at-test.exe
+        at-test.exe
