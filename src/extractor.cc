@@ -349,13 +349,14 @@ void split_box(box const& b, int32_t const max_dim, std::vector<box>& boxes,
   }
 }
 
-void update_progress(float& percentage, float const inc_val) {
+void update_progress(int const from, int const to, float& percentage,
+                     float const inc_val) {
   auto percentage_int = static_cast<int>(percentage);
   percentage += inc_val;
   if (percentage_int != static_cast<int>(percentage)) {
     percentage_int = std::min(static_cast<int>(percentage), 100);
-    printf("\r[%3d%%]", percentage_int);
-    std::fflush(stdout);
+    auto const scaled = from + (percentage_int / 100.0) * (to - from);
+    std::clog << '\0' << static_cast<int>(scaled) << '\0';
   }
 }
 
@@ -393,9 +394,9 @@ typeahead_context extract(std::string const& input_path,
       assembler_config, mp_filter);
 
   // first pass : read relations
-  std::cout << "reading relations... " << std::flush;
+  std::clog << "reading relations... " << std::flush;
   osmium::relations::read_relations(input_file, mp_manager);
-  std::cout << "done" << std::endl;
+  std::clog << "done" << std::endl;
 
   index_type index;
   location_handler_type location_handler(index);
@@ -403,7 +404,7 @@ typeahead_context extract(std::string const& input_path,
 
   // second pass : read all objects & run them first through the node location
   // handler and then the multipolygon collector and the place extractor
-  std::cout << "reading areas and locations... " << std::flush;
+  std::clog << "reading areas and locations... " << std::flush;
   osmium::io::Reader reader(
       input_file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way,
       osmium::io::read_meta::no);
@@ -417,7 +418,7 @@ typeahead_context extract(std::string const& input_path,
       }),
       place_handler);
   reader.close();
-  std::cout << "done" << std::endl;
+  std::clog << "done" << std::endl;
 
   auto const inv_population_sum =
       1.0 / static_cast<double>(geom_handler.population_sum_);
@@ -438,7 +439,7 @@ typeahead_context extract(std::string const& input_path,
       options.approximation_lvl_ > APPROX_LVL_5) {
     final_values.insert(final_values.end(), values.begin(), values.end());
   } else {
-    std::cout << "calculating approximations for polygons... " << std::endl
+    std::clog << "calculating approximations for polygons... " << std::endl
               << std::flush;
     auto percentage = 0.0F;
     auto const inc_val = (1.0F / values.size()) * 100.1F;
@@ -450,15 +451,15 @@ typeahead_context extract(std::string const& input_path,
       for (auto const& b : split_boxes) {
         final_values.emplace_back(b, i);
       }
-      update_progress(percentage, inc_val);
+      update_progress(0, 50, percentage, inc_val);
     }
-    std::cout << std::endl << "done" << std::endl;
+    std::clog << std::endl << "done" << std::endl;
   }
 
   auto rtree = bgi::rtree<value, bgi::linear<16>>();
   rtree.insert(final_values.begin(), final_values.end());
 
-  std::cout << "generating streets... " << std::endl << std::flush;
+  std::clog << "generating streets... " << std::endl << std::flush;
   auto percentage = 0.0F;
   auto const inc_val = (1.0F / place_handler.streets_.size()) * 100.1F;
   for (auto& str_it : place_handler.streets_) {
@@ -474,13 +475,13 @@ typeahead_context extract(std::string const& input_path,
         }
       }
     }
-    update_progress(percentage, inc_val);
+    update_progress(50, 100, percentage, inc_val);
   }
-  std::cout << std::endl << "done" << std::endl;
+  std::clog << std::endl << "done" << std::endl;
 
-  std::cout << "removing duplicates... " << std::flush;
+  std::clog << "removing duplicates... " << std::flush;
   remove_duplicates(context, place_handler);
-  std::cout << "done" << std::endl;
+  std::clog << "done" << std::endl;
 
   context.area_names_.resize(geom_handler.names_.size());
   for (auto const& area_name : geom_handler.names_) {
