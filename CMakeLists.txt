@@ -60,6 +60,7 @@ target_link_libraries(address-typeahead
   cereal
   zlibstatic
   expat
+  utl
   ${CMAKE_THREAD_LIBS_INIT}
 )
 set_target_properties(address-typeahead PROPERTIES COMPILE_FLAGS ${compiler-flags})

@@ -22,6 +22,10 @@
   url=git@github.com:motis-project/protozero.git
   branch=master
   commit=8c9f3fa97c2cfdceef86d0b61818ae98e9328f29
+[utl]
+  url=git@github.com:motis-project/utl.git
+  branch=master
+  commit=085c6d22901a8b97102a9aa163114f489341fdb8
 [zlib]
   url=git@github.com:motis-project/zlib.git
   branch=master

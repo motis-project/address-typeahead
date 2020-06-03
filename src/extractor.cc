@@ -22,6 +22,8 @@
 #include "osmium/osm.hpp"
 #include "osmium/visitor.hpp"
 
+#include "utl/progress_tracker.h"
+
 #include "address-typeahead/common.h"
 
 namespace bg = boost::geometry;
@@ -349,17 +351,6 @@ void split_box(box const& b, int32_t const max_dim, std::vector<box>& boxes,
   }
 }
 
-void update_progress(int const from, int const to, float& percentage,
-                     float const inc_val) {
-  auto percentage_int = static_cast<int>(percentage);
-  percentage += inc_val;
-  if (percentage_int != static_cast<int>(percentage)) {
-    percentage_int = std::min(static_cast<int>(percentage), 100);
-    auto const scaled = from + (percentage_int / 100.0) * (to - from);
-    std::clog << '\0' << static_cast<int>(scaled) << '\0';
-  }
-}
-
 void extract_options::whitelist_add(std::string const& tag,
                                     std::string const& value) {
   if (value.empty()) {
@@ -380,6 +371,10 @@ void extract_options::blacklist_add(std::string const& tag,
 
 typeahead_context extract(std::string const& input_path,
                           extract_options const& options) {
+  auto& progress_tracker =
+      utl::get_active_progress_tracker_or_activate("address");
+  progress_tracker.show_progress(true);
+
   osmium::io::File input_file(input_path);
 
   osmium::area::Assembler::config_type assembler_config;
@@ -394,9 +389,9 @@ typeahead_context extract(std::string const& input_path,
       assembler_config, mp_filter);
 
   // first pass : read relations
-  std::clog << "reading relations... " << std::flush;
+
+  progress_tracker.status("1st Pass / Relations").out_bounds(0.F, 25.F);
   osmium::relations::read_relations(input_file, mp_manager);
-  std::clog << "done" << std::endl;
 
   index_type index;
   location_handler_type location_handler(index);
@@ -404,21 +399,23 @@ typeahead_context extract(std::string const& input_path,
 
   // second pass : read all objects & run them first through the node location
   // handler and then the multipolygon collector and the place extractor
-  std::clog << "reading areas and locations... " << std::flush;
   osmium::io::Reader reader(
       input_file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way,
       osmium::io::read_meta::no);
+  progress_tracker.status("2nd Pass / Geometry")
+      .out_bounds(25.F, 50.F)
+      .in_high(reader.file_size());
   typeahead_context context;
   auto geom_handler = geometry_handler(context.areas_);
   auto place_handler = place_extractor(options.whitelist_, options.blacklist_);
   osmium::apply(
-      reader, location_handler,
+      reader, [&](auto&&) { progress_tracker.update(reader.offset()); },
+      location_handler,
       mp_manager.handler([&geom_handler](osmium::memory::Buffer&& buffer) {
         osmium::apply(buffer, geom_handler);
       }),
       place_handler);
   reader.close();
-  std::clog << "done" << std::endl;
 
   auto const inv_population_sum =
       1.0 / static_cast<double>(geom_handler.population_sum_);
@@ -439,30 +436,31 @@ typeahead_context extract(std::string const& input_path,
       options.approximation_lvl_ > APPROX_LVL_5) {
     final_values.insert(final_values.end(), values.begin(), values.end());
   } else {
-    std::clog << "calculating approximations for polygons... " << std::endl
-              << std::flush;
-    auto percentage = 0.0F;
-    auto const inc_val = (1.0F / values.size()) * 100.1F;
+    progress_tracker.status("Approximate Polygons")
+        .out_bounds(50.F, 75.F)
+        .in_high(values.size());
+
     auto const max_dim = options.approximation_lvl_;
     for (index_t i = 0; i != values.size(); ++i) {
+      progress_tracker.increment();
       std::vector<box> split_boxes;
       split_box(values[i].first, max_dim, split_boxes,
                 geom_handler.polygons_[i]);
       for (auto const& b : split_boxes) {
         final_values.emplace_back(b, i);
       }
-      update_progress(0, 50, percentage, inc_val);
     }
-    std::clog << std::endl << "done" << std::endl;
   }
 
   auto rtree = bgi::rtree<value, bgi::linear<16>>();
   rtree.insert(final_values.begin(), final_values.end());
 
-  std::clog << "generating streets... " << std::endl << std::flush;
-  auto percentage = 0.0F;
-  auto const inc_val = (1.0F / place_handler.streets_.size()) * 100.1F;
+  progress_tracker.status("Generate Streets")
+      .out_bounds(75.F, 100.F)
+      .in_high(place_handler.streets_.size());
+
   for (auto& str_it : place_handler.streets_) {
+    progress_tracker.increment();
     for (auto& loc : str_it.second) {
       auto const p = point(loc.coordinates_.lon_, loc.coordinates_.lat_);
       if (options.approximation_lvl_ == APPROX_NONE) {
@@ -475,13 +473,12 @@ typeahead_context extract(std::string const& input_path,
         }
       }
     }
-    update_progress(50, 100, percentage, inc_val);
   }
-  std::clog << std::endl << "done" << std::endl;
 
-  std::clog << "removing duplicates... " << std::flush;
+  progress_tracker.status("Removing Duplicates");
   remove_duplicates(context, place_handler);
-  std::clog << "done" << std::endl;
+
+  progress_tracker.status("FINISHED").show_progress(false);
 
   context.area_names_.resize(geom_handler.names_.size());
   for (auto const& area_name : geom_handler.names_) {
