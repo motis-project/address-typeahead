@@ -9,7 +9,7 @@
 [googletest]
   url=git@github.com:motis-project/googletest.git
   branch=master
-  commit=337308e8f74d7020c9b21544561e759bbfb01abf
+  commit=dda79b36b4324f81f3d4a0a67d56351ee9dd0c8a
 [guess]
   url=git@github.com:motis-project/guess.git
   branch=master
