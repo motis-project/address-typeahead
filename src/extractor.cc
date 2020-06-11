@@ -371,9 +371,9 @@ void extract_options::blacklist_add(std::string const& tag,
 
 typeahead_context extract(std::string const& input_path,
                           extract_options const& options) {
-  auto& progress_tracker =
+  auto progress_tracker =
       utl::get_active_progress_tracker_or_activate("address");
-  progress_tracker.show_progress(true);
+  progress_tracker->show_progress(true);
 
   osmium::io::File input_file(input_path);
 
@@ -389,8 +389,7 @@ typeahead_context extract(std::string const& input_path,
       assembler_config, mp_filter);
 
   // first pass : read relations
-
-  progress_tracker.status("1st Pass / Relations").out_bounds(0.F, 25.F);
+  progress_tracker->status("1st Pass / Relations").out_bounds(0.F, 25.F);
   osmium::relations::read_relations(input_file, mp_manager);
 
   index_type index;
@@ -402,14 +401,14 @@ typeahead_context extract(std::string const& input_path,
   osmium::io::Reader reader(
       input_file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way,
       osmium::io::read_meta::no);
-  progress_tracker.status("2nd Pass / Geometry")
+  progress_tracker->status("2nd Pass / Geometry")
       .out_bounds(25.F, 50.F)
       .in_high(reader.file_size());
   typeahead_context context;
   auto geom_handler = geometry_handler(context.areas_);
   auto place_handler = place_extractor(options.whitelist_, options.blacklist_);
   osmium::apply(
-      reader, [&](auto&&) { progress_tracker.update(reader.offset()); },
+      reader, [&](auto&&) { progress_tracker->update(reader.offset()); },
       location_handler,
       mp_manager.handler([&geom_handler](osmium::memory::Buffer&& buffer) {
         osmium::apply(buffer, geom_handler);
@@ -436,13 +435,13 @@ typeahead_context extract(std::string const& input_path,
       options.approximation_lvl_ > APPROX_LVL_5) {
     final_values.insert(final_values.end(), values.begin(), values.end());
   } else {
-    progress_tracker.status("Approximate Polygons")
+    progress_tracker->status("Approximate Polygons")
         .out_bounds(50.F, 75.F)
         .in_high(values.size());
 
     auto const max_dim = options.approximation_lvl_;
     for (index_t i = 0; i != values.size(); ++i) {
-      progress_tracker.increment();
+      progress_tracker->increment();
       std::vector<box> split_boxes;
       split_box(values[i].first, max_dim, split_boxes,
                 geom_handler.polygons_[i]);
@@ -455,12 +454,12 @@ typeahead_context extract(std::string const& input_path,
   auto rtree = bgi::rtree<value, bgi::linear<16>>();
   rtree.insert(final_values.begin(), final_values.end());
 
-  progress_tracker.status("Generate Streets")
+  progress_tracker->status("Generate Streets")
       .out_bounds(75.F, 100.F)
       .in_high(place_handler.streets_.size());
 
   for (auto& str_it : place_handler.streets_) {
-    progress_tracker.increment();
+    progress_tracker->increment();
     for (auto& loc : str_it.second) {
       auto const p = point(loc.coordinates_.lon_, loc.coordinates_.lat_);
       if (options.approximation_lvl_ == APPROX_NONE) {
@@ -475,10 +474,10 @@ typeahead_context extract(std::string const& input_path,
     }
   }
 
-  progress_tracker.status("Removing Duplicates");
+  progress_tracker->status("Removing Duplicates");
   remove_duplicates(context, place_handler);
 
-  progress_tracker.status("FINISHED").show_progress(false);
+  progress_tracker->status("FINISHED").show_progress(false);
 
   context.area_names_.resize(geom_handler.names_.size());
   for (auto const& area_name : geom_handler.names_) {
