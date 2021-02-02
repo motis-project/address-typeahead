@@ -12,19 +12,6 @@ else()
   set(compiler-flags "-DNOMINMAX -DXML_STATIC")
 endif()
 
-################################
-# Boost
-################################
-if (MSVC)
-  set(Boost_USE_STATIC_LIBS ON)
-  set(Boost_USE_MULTITHREADED ON)
-  set(Boost_USE_STATIC_RUNTIME ON)
-endif()
-find_package(Boost REQUIRED)
-
-link_directories(${Boost_LIBRARY_DIRS})
-include_directories(SYSTEM ${Boost_INCLUDE_DIR})
-
 
 ################################
 # Dependencies
@@ -54,6 +41,7 @@ if (MSVC)
   target_link_libraries(address-typeahead ws2_32)
 endif()
 target_link_libraries(address-typeahead
+  boost
   osmium
   protozero
   guess
