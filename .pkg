@@ -1,7 +1,7 @@
 [cereal]
   url=git@github.com:motis-project/cereal.git
   branch=master
-  commit=e18a5d1ad91e666a975f9901e0ba18fb3b700dce
+  commit=5afa46f98d1c22627777c3f9d048fffe3f9763dc
 [expat]
   url=git@github.com:motis-project/expat.git
   branch=master
@@ -30,3 +30,7 @@
   url=git@github.com:motis-project/zlib.git
   branch=master
   commit=8e7c86d3a0e49101b9a67d74c4a07345dcb0e485
+[boost]
+  url=git@github.com:motis-project/boost.git
+  branch=master
+  commit=4c256be5b83f0d91898ea48d65bdb33e07d30f65
