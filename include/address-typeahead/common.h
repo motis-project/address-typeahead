@@ -15,21 +15,21 @@ namespace address_typeahead {
 
 using index_t = uint32_t;
 
-uint32_t constexpr const ADMIN_LEVEL_0(1);
-uint32_t constexpr const ADMIN_LEVEL_1(1 << 1);
-uint32_t constexpr const ADMIN_LEVEL_2(1 << 2);
-uint32_t constexpr const ADMIN_LEVEL_3(1 << 3);
-uint32_t constexpr const ADMIN_LEVEL_4(1 << 4);
-uint32_t constexpr const ADMIN_LEVEL_5(1 << 5);
-uint32_t constexpr const ADMIN_LEVEL_6(1 << 6);
-uint32_t constexpr const ADMIN_LEVEL_7(1 << 7);
-uint32_t constexpr const ADMIN_LEVEL_8(1 << 8);
-uint32_t constexpr const ADMIN_LEVEL_9(1 << 9);
-uint32_t constexpr const DMIN_LEVEL_10(1 << 10);
-uint32_t constexpr const ADMIN_LEVEL_11(1 << 11);
-uint32_t constexpr const ADMIN_LEVEL_12(1 << 12);
-uint32_t constexpr const ADMIN_LEVEL_MAX(ADMIN_LEVEL_12);
-uint32_t constexpr const POSTCODE(1 << 13);
+constexpr auto const ADMIN_LEVEL_0(1);
+constexpr auto const ADMIN_LEVEL_1(1 << 1);
+constexpr auto const ADMIN_LEVEL_2(1 << 2);
+constexpr auto const ADMIN_LEVEL_3(1 << 3);
+constexpr auto const ADMIN_LEVEL_4(1 << 4);
+constexpr auto const ADMIN_LEVEL_5(1 << 5);
+constexpr auto const ADMIN_LEVEL_6(1 << 6);
+constexpr auto const ADMIN_LEVEL_7(1 << 7);
+constexpr auto const ADMIN_LEVEL_8(1 << 8);
+constexpr auto const ADMIN_LEVEL_9(1 << 9);
+constexpr auto const DMIN_LEVEL_10(1 << 10);
+constexpr auto const ADMIN_LEVEL_11(1 << 11);
+constexpr auto const ADMIN_LEVEL_12(1 << 12);
+constexpr auto const ADMIN_LEVEL_MAX(ADMIN_LEVEL_12);
+constexpr auto const POSTCODE(1 << 13);
 
 struct coordinates {
   int32_t lon_;
