@@ -7,7 +7,7 @@ if(AT_LINT)
 endif()
 
 if (NOT MSVC)
-  set(compiler-flags "-Wall -Werror -Wextra")
+  set(compiler-flags "-Wall -Wextra")
 else()
   set(compiler-flags "-DNOMINMAX -DXML_STATIC")
 endif()
